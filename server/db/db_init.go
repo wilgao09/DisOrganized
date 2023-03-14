@@ -67,7 +67,7 @@ func Init_struct(name string) (DoDb, error) {
 
 	confbytes, err := io.ReadAll(conf)
 	if err != nil {
-		return dbstruct, errors.New("failed to read config file")
+		return dbstruct, errors.New("failed to read config file at " + name)
 	}
 
 	err = json.Unmarshal(confbytes, &dbstruct.config)
@@ -91,7 +91,7 @@ func Db_file_exists(name string) bool {
 }
 
 const initjson = `{
-	deps: []
+	"deps": []
 }`
 
 func create_json_file(name string) bool {

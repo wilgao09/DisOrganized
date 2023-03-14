@@ -31,6 +31,19 @@ func main() {
 	} else {
 		fmt.Println("found")
 	}
+	db, e := dbutil.Init_struct("kiki")
+	if e != nil {
+		log.Fatal(e)
+	} else {
+		fmt.Println("db struct initted")
+	}
+	b := db.AddObject("{\"x\": 100, \"y\":100, \"w\":100, \"h\": 100}")
+	if !b {
+		fmt.Println("failed to add object")
+	}
+
+	fmt.Println(db.GetObjects())
+
 	// var err error
 
 	// db, err := sql.Open("sqlite3", "./foo.db")
