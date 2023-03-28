@@ -5,6 +5,7 @@ import (
 	"log"
 
 	dbutil "williamgao09/disorganized/db"
+	wsutil "williamgao09/disorganized/ws"
 
 	"github.com/gin-gonic/gin"
 )
@@ -55,6 +56,9 @@ func main() {
 
 	// fmt.Println(db.GetObjects())
 
+	// initialize ws stuff
+	wsutil.Init()
+
 	fmt.Println("starting server")
 	server := gin.Default()
 	server.GET("/helloworld", func(ctx *gin.Context) {
@@ -63,15 +67,20 @@ func main() {
 		})
 	})
 
-	server.GET("/api/retrieveFile")
-	server.GET("/api/retrieveConfig")
+	// server.GET("/api/retrieveFile")
+	// server.GET("/api/retrieveConfig")
 
-	server.POST("/api/addDep")
-	server.POST("/api/createFile/:")
-	server.POST("/api/openFile/:")
-	server.POST("/api/closeFile/")
-	server.POST("/api/diff/:name")
+	// server.POST("/api/addDep")
+	// server.POST("/api/createFile")
+	// server.POST("/api/openFile")
+	// server.POST("/api/closeFile")
+	// server.POST("/api/diff/:name")
 
+	server.GET("/connectws", func(ctx *gin.Context) {
+		log.Println("got to the handler")
+		wsutil.EstablishConnection(ctx.Writer, ctx.Request)
+	})
+	//
 
 	fmt.Printf("server running on %d\n", portno)
 	server.Run(fmt.Sprintf(":%d", portno))
