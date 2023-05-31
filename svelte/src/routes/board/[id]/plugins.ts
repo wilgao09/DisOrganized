@@ -1,0 +1,83 @@
+export default class PluginManager {
+    private fnorder: Array<PluginFn>;
+    private fnnamemap: Map<string, [number, boolean]>; // index and active state
+
+    constructor(oldhandler?: PluginManager) {
+        if (oldhandler) {
+            this.fnorder = oldhandler.fnorder;
+            this.fnnamemap = oldhandler.fnnamemap;
+        } else {
+            this.fnorder = [];
+            this.fnnamemap = new Map();
+        }
+    }
+
+    public addFn(p: PluginFn) {
+        if (this.fnorder[p.fnPrio] !== undefined) {
+            alert("panic: function priority collision");
+            return;
+        }
+        if (this.fnnamemap.get(p.fnName) !== undefined) {
+            alert("panic: function name collision");
+            return;
+        }
+        this.fnorder[p.fnPrio] = p;
+        this.fnnamemap.set(p.fnName, [p.fnPrio, false]);
+    }
+
+    public activateFn(s: string) {
+        let k;
+        if ((k = this.fnnamemap.get(s)) === undefined) {
+            alert("panic: function name not found in activate");
+            return;
+        }
+        if (k[1] === true) {
+            return;
+        }
+        k[1] = true;
+        this.fnnamemap.set(s, k);
+        return this.offer(this.fnorder[k[0]].onActivate(), k[0] + 1);
+    }
+    public deactivateFn(s: string): any {
+        let k;
+        if ((k = this.fnnamemap.get(s)) === undefined) {
+            alert("panic: function name not found in deactivate");
+            return;
+        }
+        k[1] = false;
+        this.fnnamemap.set(s, k);
+        let j = this.fnorder[k[0]].onDeactivate();
+        console.log(k);
+
+        return this.offer(j, k[0] + 1);
+    }
+
+    // go through all active functions and chain data through them until you get an undefined or you reach the end
+    // return the end result
+    public offer(p: any, start?: number): any {
+        let i: any = p;
+        let t1, t2;
+        for (
+            let j = start ?? 0;
+            j < this.fnorder.length && i !== undefined;
+            j++
+        ) {
+            t1 = this.fnorder[j];
+            // if this plugin is defined
+            if (
+                t1 === undefined ||
+                this.fnnamemap.get(t1.fnName) === undefined
+            ) {
+                continue;
+            }
+            // if t1 is not active
+            t2 = this.fnnamemap.get(t1.fnName);
+            if (t2 === undefined || t2[1] === false) {
+                continue;
+            }
+            //offer to t1
+            i = t1.offer(i);
+        }
+        return i;
+    }
+}

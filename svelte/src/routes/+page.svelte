@@ -1,5 +1,14 @@
 <script>
     import Banner from "./Banner.svelte";
+
+    import { browser } from "$app/environment";
+
+    var inElectron = false;
+
+    if (browser && window.electronAPI !== undefined) {
+        window.electronAPI.ping();
+        inElectron = true;
+    }
 </script>
 
 <section>
@@ -7,9 +16,12 @@
     <!-- menu -->
 
     <div class="menu">
-        <a href="/my">
-            <input type="button" value="My" class="lbutton" />
-        </a>
+        <button class="lbutton" disabled={!inElectron}>
+            <a href={inElectron ? "/my" : ""}> My </a>
+        </button>
+        <!-- <button class = "lbutton">
+
+        </button> -->
         <!-- <a href="/other"> -->
         <input type="button" value="Other" class="lbutton" />
         <!-- </a> -->

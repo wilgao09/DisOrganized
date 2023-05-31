@@ -1,7 +1,7 @@
 <script>
     import { browser } from "$app/environment";
 
-    if (browser) {
+    if (browser && window.electronAPI !== undefined) {
         window.electronAPI.ping();
     }
 </script>
