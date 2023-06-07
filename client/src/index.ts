@@ -2,47 +2,53 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import child from "child_process";
 
 import config from "../config.json";
-import path from "path"
+import path from "path";
 
-config.resourcePath = __dirname + "/../"+config.resourcePath
+config.resourcePath =
+    __dirname + "/../" + config.resourcePath;
 process.env.HOST = "localhost";
-process.env.PORT = "" + config.sveltePort
-import svelteServer from "./svelteWebserver"
+process.env.PORT = "" + config.sveltePort;
+import svelteServer from "./svelteWebserver";
 
-
-var goserver : child.ChildProcessWithoutNullStreams;
-
+var goserver: child.ChildProcessWithoutNullStreams;
 
 app.whenReady().then(() => {
-    
-    ipcMain.on("myelectronping", (e) => {
-        console.log("myelectronpong")
-    })
-
     const win = new BrowserWindow({
         width: 800,
         height: 600,
         webPreferences: {
-			contextIsolation: true,
-            preload: path.join(__dirname, 'preload.js')
-		},
+            contextIsolation: true,
+            preload: path.join(__dirname, "preload.js"),
+        },
     });
 
+    ipcMain.on("myelectronping", (e) => {
+        console.log("myelectronpong");
+        win.webContents.send("myelectronpong", "UWU OWO");
+    });
 
-    
+    goserver = child.spawn(
+        `${config.resourcePath}/server.exe`,
+        {
+            stdio: ["pipe", "pipe", "pipe"],
+        }
+    );
+    goserver.stdout.on("data", (c) => {
+        // forward it to admin
+        console.log("pass to admin");
+        win.webContents.send("PrivilegedMessage", c);
+    });
 
-    console.log("???? spawn? at " + `${config.resourcePath}/server.exe`)
-    const server = child.spawn(`${config.resourcePath}/server.exe`);
-    server.stdout.on("data", (c) => {
-        console.log(`server: ${c}`)
-    })
-    goserver = server
+    ipcMain.on("PrivilegedMessage", (e, msg) => {
+        //pass it to the server
+        console.log("pass to server: " + msg);
+        goserver.stdin.write(msg + "\n");
+        // goserver.stdin.end();
+    });
 
-    console.log("spawn webserver")
+    console.log("spawn webserver");
     svelteServer();
 
-    console.log("load page")
+    console.log("load page");
     win.loadURL(`http://localhost:${config.sveltePort}`);
-    
 });
-

@@ -4,53 +4,61 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var dbdir = "./"
+var name = "untitled"
 var inited = false
 
+// given a path ot a directory that contains all board data, initialize the db portion of it
+// (this assumes that the config portion has already been built)
+// dbdirpath should be an absolute pathname
 func Init(dbdirpath string) error {
 
-	if dbdirpath[len(dbdirpath)-1:] != "/" {
-		dbdirpath += "/"
+	// check that this is a valid path with a config.json
+	f, err := (os.Stat(dbdirpath))
+	if err != nil || !f.IsDir() {
+		return err
 	}
-	dbdirpath += "boards/"
-
-create_boards_dir:
-	f, err := os.Stat(dbdirpath)
+	f, err = os.Stat(fmt.Sprintf("%s/config.json", dbdirpath))
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			os.Mkdir(dbdirpath, 0666)
-			goto create_boards_dir
-		} else {
-			return errors.New("failed to stat")
+		return err
+	}
+	if f.IsDir() {
+		return errors.New("config file is a directory, expected JSON")
+	}
+
+	dbdir = dbdirpath
+	name = filepath.Base(dbdirpath)
+	inited = true
+
+	// check if there is a db file, create one if there isnt
+	if !Db_file_exists() {
+		if !Create_db_file() {
+			inited = false
+			return errors.New("failed to create db file")
 		}
 	}
-	if !f.IsDir() {
-		os.Remove(dbdirpath)
-		os.Mkdir(dbdirpath, 0666)
-	}
-	dbdir = dbdirpath
-	inited = true
 	return nil
 }
 
-func Init_struct(name string) (DoDb, error) {
+func Init_struct() (DoDb, error) {
 
 	var dbstruct DoDb
 	if !inited {
 		return dbstruct, errors.New("database module uninitialized")
 	}
-	name = dbdir + name
-	if _, err := os.Stat(name + ".db"); errors.Is(err, os.ErrNotExist) {
+	if !Db_file_exists() {
 		return dbstruct, errors.New("database does not exist")
 	}
 
-	odb, err := sql.Open("sqlite3", name+".db")
+	odb, err := sql.Open("sqlite3", fmt.Sprintf("%s/%s.db", dbdir, name))
 
 	if err != nil {
 		return dbstruct, errors.New("failed to open db")
@@ -59,7 +67,7 @@ func Init_struct(name string) (DoDb, error) {
 	dbstruct.name = name
 	dbstruct.dbref = odb
 
-	conf, err := os.Open(name + ".json")
+	conf, err := os.Open(dbdir + "/config.json")
 	if err != nil {
 		return dbstruct, errors.New("failed to open config file")
 	}
@@ -79,44 +87,25 @@ func Init_struct(name string) (DoDb, error) {
 	return dbstruct, nil
 }
 
-func Db_file_exists(name string) bool {
+func Db_file_exists() bool {
 	if !inited {
 		return false
 	}
-	name = dbdir + name
-	if _, err := os.Stat(name + ".db"); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(fmt.Sprintf("%s/%s.db", dbdir, name)); errors.Is(err, os.ErrNotExist) {
 		return false
 	}
 	return true
 }
 
-const initjson = `{
-	"deps": []
-}`
-
-func create_json_file(name string) bool {
-	var n int
-	f, err := os.Create(name + ".json")
-	if err != nil {
-		return false
-	}
-	n, err = f.Write([]byte(initjson))
-	if err != nil || n != len(initjson) {
-		return false
-	}
-	return true
-}
-
-func Create_db_file(name string) bool {
+func Create_db_file() bool {
 	if !inited {
 		return false
 	}
-	if Db_file_exists(name) {
+	if Db_file_exists() {
 		return false
 	}
-	name = dbdir + name
 
-	odb, err := sql.Open("sqlite3", "./"+name+".db")
+	odb, err := sql.Open("sqlite3", fmt.Sprintf("%s/%s.db", dbdir, name))
 
 	if err != nil {
 		return false
@@ -126,5 +115,5 @@ func Create_db_file(name string) bool {
 	odb.Exec(stmt)
 	defer odb.Close()
 
-	return create_json_file(name)
+	return true
 }

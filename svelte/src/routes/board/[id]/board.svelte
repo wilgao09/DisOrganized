@@ -51,6 +51,30 @@
     //     }
     // }
 
+    class brush {
+        constructor() {
+            this.strokeColor = "black";
+            this.strokeWidth = "20";
+            this.offer = (
+                /** @type {{ [x: string]: string; tag: string; }} */ x
+            ) => {
+                if (x.tag === "changebrush") {
+                    this.strokeColor = x["strokeColor"];
+                    this.strokeWidth = x["strokeWidth"];
+                } else {
+                    if (x.style === undefined) x.style = "";
+                    x.style += `fill:rgba(0,0,0,0);stroke-width:${this.strokeWidth};stroke:${this.strokeColor}`;
+                }
+                return x;
+            };
+            this.fnName = "brush";
+            this.fnPrio = 99;
+            this.onActivate = () => {};
+            this.onDeactivate = () => {};
+            this.JSONtoSVG = () => {};
+        }
+    }
+
     class rect {
         constructor() {
             this.n = 999;
@@ -93,8 +117,38 @@
         }
     }
 
+    class poly {
+        constructor() {
+            /**
+             * @type {number[][]}
+             */
+            this.buff = [];
+            this.offer = (
+                /** @type {{ x: undefined; y: undefined; } | undefined} */ x
+            ) => {
+                if (x === undefined || x.x === undefined || x.y === undefined)
+                    return x;
+                this.buff.push([x.x, x.y]);
+            };
+            this.fnName = "poly";
+            this.fnPrio = 3;
+            this.onActivate = () => (this.buff = []);
+            this.onDeactivate = () => {
+                return {
+                    tag: "polyline",
+                    points: this.buff.map(([x, y]) => `${x},${y}`).join(" "), //TODO: do not ever use this
+                };
+            };
+            this.JSONtoSVG = () => {};
+        }
+    }
+
     ph.addFn(new rect());
     ih.addKeyMapping("b", "rect");
+    ph.addFn(new brush());
+    ph.activateFn("brush");
+    ph.addFn(new poly());
+    ih.addKeyMapping("s", "poly");
 
     //  listen to new drawings
     /**
@@ -143,7 +197,7 @@
 </script>
 
 <div class="ccontain">
-    <svg class="bcanvas" width="600" height="400" bind:this={svgel} />
+    <svg class="bcanvas" width="100%" height="100%" bind:this={svgel} />
     <canvas class="bcanvas" id="dcanvas" />
     <canvas
         class="bcanvas"

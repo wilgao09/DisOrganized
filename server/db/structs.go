@@ -6,7 +6,7 @@ import (
 )
 
 type DbConfigFile struct {
-	Deps []string
+	Plugins []string
 }
 
 type DoDb struct {

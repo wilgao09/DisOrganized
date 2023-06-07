@@ -12,8 +12,8 @@ import { vitePreprocess } from "@sveltejs/kit/vite";
 //     },
 // };
 
-import adapter from "@ptkdev/sveltekit-electron-adapter";
-// import adapter from "@sveltejs/adapter-static";
+// import adapter from "@ptkdev/sveltekit-electron-adapter";
+import adapter from "@sveltejs/adapter-static";
 // import adapter from "@sveltejs/adapter-node";
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -23,6 +23,9 @@ const config = {
         adapter: adapter({
             strict: false, //TODO: this is suppressing a warning when running with sverdle (not that sverdle even works)
         }),
+        // prerender: {
+        //     entries: ["/", ]
+        // }
     },
 };
 

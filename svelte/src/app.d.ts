@@ -9,7 +9,8 @@ declare global {
     }
     interface Window {
         electronAPI: {
-            ping: () => {};
+            ping: () => void;
+            getAvailableBoards: () => Promise<string[]>;
         };
     }
 

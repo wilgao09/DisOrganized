@@ -15,10 +15,19 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(_ *http.Request) bool { return true }, //TODO: SEVERE remove this
 }
 
-func Init() {
-	currconnections = CreateConnectionsStruct()
+func GetConnectionsStruct() Connections {
+	return currconnections
 }
 
+func Init() {
+	currconnections = CreateConnectionsStruct()
+	// handelrs here
+}
+
+// listenws continually listens to a websocket. This function does not return.
+// When a message arrives through this websocket, it is expected that the message follow
+// the form [byte][msg] where byte is 8 bits denoting what type of message it is, and msg
+// is the message in JSON.
 func listenws(c *websocket.Conn) {
 	for {
 		msgtype, p, err := c.ReadMessage()
@@ -46,7 +55,9 @@ func listenws(c *websocket.Conn) {
 	}
 }
 
-func EstablishConnection(w http.ResponseWriter, r *http.Request) {
+// EstablishConnection takes a request and upgrades the connection to a websocket.
+// This function does not return.
+func EstablishConnection(w http.ResponseWriter, r *http.Request, name string) {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -54,7 +65,7 @@ func EstablishConnection(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return //TODO: how does this error out?
 	}
-	currconnections.AddConnection(conn)
+	currconnections.AddConnection(conn, name)
 
 	listenws(conn)
 }

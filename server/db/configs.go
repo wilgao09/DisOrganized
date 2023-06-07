@@ -3,7 +3,7 @@ package db
 import "sort"
 
 func (cfg *DbConfigFile) Init() {
-	sort.Slice(cfg.Deps, func(i, j int) bool {
+	sort.Slice(cfg.Plugins, func(i, j int) bool {
 		return i < j
 	})
 }
@@ -13,32 +13,32 @@ func (cfg *DbConfigFile) AddDependency(dep string) bool {
 	var l, r, mid int
 	l = 0
 	r = len(dep) - 1
-	if dep < cfg.Deps[l] {
+	if dep < cfg.Plugins[l] {
 		l = 0
 		goto ins
 	}
-	if dep > cfg.Deps[r] {
+	if dep > cfg.Plugins[r] {
 		l = r + 1
 		goto ins
 	}
 
 	for l < r {
 		mid = (l + r) >> 1
-		if cfg.Deps[mid] == dep {
+		if cfg.Plugins[mid] == dep {
 			return false
-		} else if cfg.Deps[mid] < dep {
+		} else if cfg.Plugins[mid] < dep {
 			l = mid + 1
 		} else {
 			r = mid - 1
 		}
 	}
-	if cfg.Deps[l] == dep {
+	if cfg.Plugins[l] == dep {
 		return false
 	}
 ins:
-	t := append(cfg.Deps, "")
+	t := append(cfg.Plugins, "")
 	copy(t[l+1:], t[l:])
 	t[l] = dep
-	cfg.Deps = t
+	cfg.Plugins = t
 	return true
 }

@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"os"
 
-	dbutil "williamgao09/disorganized/db"
+	ipcutil "williamgao09/disorganized/ipc"
 	wsutil "williamgao09/disorganized/ws"
 
 	"github.com/gin-gonic/gin"
@@ -25,11 +28,19 @@ const portno = 11326
 // }
 
 func main() {
-
-	err := dbutil.Init("../../..")
+	f, err := os.OpenFile("server_log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatal("Failed to initialize the boards directory")
+		log.Fatalf("error opening file: %v", err)
 	}
+	defer f.Close()
+
+	log.SetOutput(f)
+	// fmt.Printf("hello world\n")
+
+	// err := dbutil.Init("../../..")
+	// if err != nil {
+	// 	log.Fatal("Failed to initialize the boards directory")
+	// }
 
 	// err := dbutil.Create_db_file("kiki")
 	// if !err {
@@ -59,11 +70,15 @@ func main() {
 	// initialize ws stuff
 	wsutil.Init()
 
-	fmt.Println("starting server")
+	log.Println("starting server")
+	gin.SetMode(gin.ReleaseMode)
+	gin.DefaultWriter = ioutil.Discard
+
 	server := gin.Default()
+
 	server.GET("/helloworld", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
-			"message": "HELLO WORLD",
+			"msg": "HELLO WORLD",
 		})
 	})
 
@@ -76,13 +91,30 @@ func main() {
 	// server.POST("/api/closeFile")
 	// server.POST("/api/diff/:name")
 
-	server.GET("/connectws", func(ctx *gin.Context) {
-		log.Println("got to the handler")
-		wsutil.EstablishConnection(ctx.Writer, ctx.Request)
-	})
-	//
+	server.GET("/connectws/:name", func(ctx *gin.Context) {
+		log.Println("Requesting permission from admin . . .")
+		if ipcutil.NewConnectionRequest(ctx.Param("name"), getRequestIP(ctx.Request)) {
+			wsutil.EstablishConnection(ctx.Writer, ctx.Request, ctx.Param("name"))
+		} else {
+			ctx.JSON(403, gin.H{
+				"msg": "Admin refused",
+			})
+		}
 
-	fmt.Printf("server running on %d\n", portno)
+	})
+
+	log.Printf("Spawning stdio listeners\n")
+	go ipcutil.IpcListen()
+
+	log.Printf("server running on %d\n", portno)
 	server.Run(fmt.Sprintf(":%d", portno))
-	fmt.Println("server died!")
+	log.Println("server died!")
+}
+
+func getRequestIP(req *http.Request) string {
+	clientIp := req.Header.Get("X-FORWARDED-FOR")
+	if clientIp != "" {
+		return clientIp
+	}
+	return req.RemoteAddr
 }
