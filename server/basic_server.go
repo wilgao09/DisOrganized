@@ -28,6 +28,7 @@ const portno = 11326
 // }
 
 func main() {
+	// log file location
 	f, err := os.OpenFile("server_log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
@@ -100,6 +101,7 @@ func main() {
 				"msg": "Admin refused",
 			})
 		}
+		// ws.EstablishConnection(ctx.Writer, ctx.Request, "h")
 
 	})
 

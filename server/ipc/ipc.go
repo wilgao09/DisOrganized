@@ -50,10 +50,12 @@ func IpcListen() {
 			goto next //this is just a continue
 		case ACCEPT_USER:
 			log.Printf("got accept user response: %s\n", s)
-			// do something
+			// note that this gets passed to teh IPCStatus
+			// struct to get handled in a client thread
 		case REJECT_USER:
 			log.Printf("got reject user response: %s\n", s)
-			// do something
+			// note that this gets passed to teh IPCStatus
+			// struct to get handled in a client thread
 		case WORKING_DIRECTORY:
 			log.Printf("got working directory request: %s\n", s)
 			if len(bod) > 0 {
@@ -105,12 +107,14 @@ func ipcSendAndWait(c IPCCommand, s string) (IPCCommand, string) { // to be call
 	// only one client can have control over the IPC functions
 	IPCStatus.lock.Lock()
 
-	writer := bufio.NewWriter(os.Stdout)
-	s = fmt.Sprintf("%c%s\n", rune(c+32), s)
-	cnt, err := writer.WriteString(s)
-	if err != nil || cnt != len(s) {
-		log.Fatal("Failed to send command in ipcSend")
-	}
+	fmt.Fprintf(os.Stdout, "%c%s\n", rune(c+32), s)
+
+	// writer := bufio.NewWriter(os.Stdout)
+	// s = fmt.Sprintf("%c%s\n", rune(c+32), s)
+	// cnt, err := writer.WriteString(s)
+	// if err != nil || cnt != len(s) {
+	// 	log.Fatal("Failed to send command in ipcSend")
+	// }
 
 	IPCStatus.doneReading.Lock()
 	IPCStatus.hasValue.Lock() // wait for a value to come in

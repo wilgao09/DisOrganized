@@ -3,6 +3,7 @@ package ipc
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -40,8 +41,9 @@ var currentWorkingDirectory, _ = filepath.Abs("%appdata%/DisOrganized/boards")
 var pluginDirectory, _ = filepath.Abs("%appdata/DisOrganized/plugins")
 
 func NewConnectionRequest(name string, ip string) bool {
-	IPCStatus.lock.Lock()
+	log.Println("Making request for entry")
 	rescmd, _ := ipcSendAndWait(ACCEPT_USER, fmt.Sprintf("%s@%s", name, ip))
+	log.Printf("got response %d\n", rescmd)
 	if rescmd == ACCEPT_USER {
 		return true
 	} else {

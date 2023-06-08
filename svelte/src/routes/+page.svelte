@@ -19,14 +19,17 @@
         <button class="lbutton" disabled={!inElectron}>
             <a href={inElectron ? "/my" : ""}> My </a>
         </button>
-        <!-- <button class = "lbutton">
+        <!-- <button class = "lbutton"> -->
 
-        </button> -->
-        <!-- <a href="/other"> -->
-        <input type="button" value="Other" class="lbutton" />
-        <!-- </a> -->
+        <button class="lbutton">
+            <a href="/other"> Other </a>
+        </button>
 
-        <input type="button" value="Settings" class="sbutton" />
+        <input
+            type="button"
+            value="Settings"
+            class="sbutton"
+        />
         <input type="button" value="Quit" class="sbutton" />
     </div>
     <a href="/board/65"> go to board 65</a>

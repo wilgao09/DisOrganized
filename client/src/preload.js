@@ -80,14 +80,12 @@ const ea = {
 
 contextBridge.exposeInMainWorld("electronAPI", {
     ping: () => ipcRenderer.send("myelectronping"),
-    getAvailableBoards:  () => {
-        return ea.queue.send(
-            ea.commands.AVAILABLE_BOARDS,
-            "",
-            true
-        ).then((res) => {
-            return res.split("\v")
-        })
+    getAvailableBoards: () => {
+        return ea.queue
+            .send(ea.commands.AVAILABLE_BOARDS, "", true)
+            .then((res) => {
+                return res.split("\v");
+            });
     },
 });
 
@@ -101,8 +99,18 @@ ipcRenderer.on(chan, (ev, msg) => {
     msg = new TextDecoder().decode(msg);
     console.log(msg);
     [cmd, bod] = ea.fns.decode(msg);
+    // if this is a resposne to a question, it gets fulfilled
     if (!ea.queue.fulfill(cmd, bod)) {
-        // TODO:
+        // TODO: these are requests originating from teh server
         console.log(`${cmd}: ${bod}`);
+        //THIS IS TEMPORARY; WE MUST MIGRATE THIS TO BE BETTER
+
+        if (cmd == ea.commands.ACCEPT_USER) {
+            if (confirm(bod)) {
+                ea.queue.send(ea.commands.ACCEPT_USER);
+            } else {
+                ea.queue.send(ea.commands.REJECT_USER);
+            }
+        }
     }
 });
