@@ -2,8 +2,17 @@
     import PluginManger from "./plugins";
     import InputManager from "./inputs";
     import DrawingEngine from "./dengine";
+    import * as wsutil from "./wsutil";
     import { UserInputs, UserActions } from "./enums";
+    import { declName, destIp, destPort } from "$lib/store";
+    import { get } from "svelte/store";
     import { onMount } from "svelte";
+
+    let wsurl = `ws://${encodeURIComponent(
+        get(destIp)
+    )}:${encodeURIComponent(
+        get(destPort)
+    )}/connectws/${encodeURIComponent(get(declName))}`;
     let ph = new PluginManger();
     let ih = new InputManager();
 
@@ -22,11 +31,52 @@
 
     onMount(() => {
         let t = icanvasel.getContext("2d");
-        if (icanvasel !== null && t !== null) de = new DrawingEngine(t, svgel);
-        else alert("panic: drawingengine couldnt be initialized");
+        if (icanvasel !== null && t !== null)
+            de = new DrawingEngine(t, svgel);
+        else
+            alert(
+                "panic: drawingengine couldnt be initialized"
+            );
 
         icanvasel.height = window.innerHeight;
         icanvasel.width = window.innerWidth;
+        // TODO: replace all instances of window.boardsocket
+        // with a state variable
+        window.boardSocket = wsutil.opensocket(
+            wsurl,
+            (m) => {
+                switch (m.msgType) {
+                    case wsutil.WSMessageCode.MESSAGE:
+                        console.log(
+                            `New message: ${m.msg}`
+                        );
+                        break;
+                    case wsutil.WSMessageCode.FETCH:
+                        de.clearAll();
+                        // TODO: needs to be trycaught
+                        let arrOfObj = JSON.parse(m.msg);
+                        for (let someObj of arrOfObj) {
+                            // TODO: postprocessing by plugins
+                            de.drawSVGJSON(someObj);
+                        }
+                        break;
+                    case wsutil.WSMessageCode.CREATE:
+                        de.drawSVGJSON(JSON.parse(m.msg));
+                        break;
+                }
+            }
+        );
+
+        setInterval(() => {
+            window.boardSocket({
+                msgType: wsutil.WSMessageCode.FETCH,
+                msg: "",
+            });
+        }, 30000);
+        window.boardSocket({
+            msgType: wsutil.WSMessageCode.FETCH,
+            msg: "",
+        });
     });
 
     // class strokep {
@@ -82,7 +132,11 @@
             this.offer = (
                 /** @type {{ x: undefined; y: undefined; } | undefined} */ d
             ) => {
-                if (d === undefined || d.x === undefined || d.y === undefined)
+                if (
+                    d === undefined ||
+                    d.x === undefined ||
+                    d.y === undefined
+                )
                     return; // this kills the chain so if rect is active, we will only work towards building the rect
                 if (this.n === 999) {
                     this.n = this.s = d.y;
@@ -126,7 +180,11 @@
             this.offer = (
                 /** @type {{ x: undefined; y: undefined; } | undefined} */ x
             ) => {
-                if (x === undefined || x.x === undefined || x.y === undefined)
+                if (
+                    x === undefined ||
+                    x.x === undefined ||
+                    x.y === undefined
+                )
                     return x;
                 this.buff.push([x.x, x.y]);
             };
@@ -136,7 +194,9 @@
             this.onDeactivate = () => {
                 return {
                     tag: "polyline",
-                    points: this.buff.map(([x, y]) => `${x},${y}`).join(" "), //TODO: do not ever use this
+                    points: this.buff
+                        .map(([x, y]) => `${x},${y}`)
+                        .join(" "), //TODO: do not ever use this
                 };
             };
             this.JSONtoSVG = () => {};
@@ -191,13 +251,22 @@
             let m = ph.deactivateFn(f);
             console.log("deactivated");
             console.log(m);
-            de.drawSVGJSON(m); // THIS IS NOT HOW IT SHOULD BE DONE
+            window.boardSocket({
+                msg: JSON.stringify(m),
+                msgType: wsutil.WSMessageCode.CREATE,
+            });
+            // de.drawSVGJSON(m); // THIS IS NOT HOW IT SHOULD BE DONE
         }
     }
 </script>
 
 <div class="ccontain">
-    <svg class="bcanvas" width="100%" height="100%" bind:this={svgel} />
+    <svg
+        class="bcanvas"
+        width="100%"
+        height="100%"
+        bind:this={svgel}
+    />
     <canvas class="bcanvas" id="dcanvas" />
     <canvas
         class="bcanvas"

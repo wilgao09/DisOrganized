@@ -20,7 +20,8 @@ const ea = {
             String.fromCharCode(32 + cmd) + str,
         decode: (str) => [
             str.charCodeAt(0) - 32,
-            str.slice(1),
+            // remove the command byte and the newline
+            str.slice(1, str.length - 1),
         ],
     },
     queue: {
@@ -86,6 +87,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
             .then((res) => {
                 return res.split("\v");
             });
+    },
+    openBoard: (name) => {
+        return ea.queue.send(
+            ea.commands.OPEN_BOARD,
+            name,
+            true
+        );
     },
 });
 

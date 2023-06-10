@@ -143,3 +143,6 @@ func CreateBoard(name string) bool {
 
 	return true
 }
+
+// OpenBoard is in db
+// func OpenBoard()

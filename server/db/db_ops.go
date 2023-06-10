@@ -3,24 +3,46 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 )
 
-func (dodb *DoDb) AddObject(obj string) bool {
-	stmt, err := dodb.dbref.Prepare("insert into board(jsonobj) values ( ? );")
+func (dodb *DoDb) AddObject(obj string) (string, bool) {
+	dodb.lock.Lock()
+	defer dodb.lock.Unlock()
+
+	// get an id for this object
+	idstmt, err := dodb.dbref.Query("select id from board order by id desc limit 1")
+	if err != nil {
+		log.Println("failed to get next id")
+		return "", false
+	}
+	var id int = 0
+	if idstmt.Next() {
+		idstmt.Scan(&id)
+		id = id + 1
+	}
+	idstmt.Close()
+	obj = fmt.Sprintf("%s,\"id\":%d}", obj[:len(obj)-1], id)
+
+	stmt, err := dodb.dbref.Prepare("insert into board(id, jsonobj) values ( ? , ? );")
 	if err != nil {
 		log.Println("failed to prepare stmt")
-		return false
+		return "", false
 	}
-	_, err = stmt.Exec(obj)
+	_, err = stmt.Exec(id, obj)
 	if err != nil {
 		log.Println("failed to exec prepared stmt")
+		log.Printf("%s\n", err)
 	}
+	stmt.Close()
 
-	return err == nil
+	return obj, err == nil
 }
 
 func (dodb *DoDb) GetObjects() ([]string, error) {
+	dodb.lock.Lock()
+	defer dodb.lock.Unlock()
 	res, err := dodb.dbref.Query("select jsonobj from board order by id asc;")
 	if err != nil {
 		return []string{}, err
@@ -36,6 +58,8 @@ func (dodb *DoDb) GetObjects() ([]string, error) {
 }
 
 func (dodb *DoDb) ApplyDiff(diff DbDiff) error {
+	dodb.lock.Lock()
+	defer dodb.lock.Unlock()
 	var err error
 	var stmt *sql.Stmt
 	switch diff.Dtype {

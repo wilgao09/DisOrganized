@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -51,6 +52,8 @@ func Init(dbdirpath string) error {
 func Init_struct() (DoDb, error) {
 
 	var dbstruct DoDb
+	// i dont know if this is necessary
+	var somelock sync.Mutex
 	if !inited {
 		return dbstruct, errors.New("database module uninitialized")
 	}
@@ -66,6 +69,7 @@ func Init_struct() (DoDb, error) {
 
 	dbstruct.name = name
 	dbstruct.dbref = odb
+	dbstruct.lock = &somelock
 
 	conf, err := os.Open(dbdir + "/config.json")
 	if err != nil {

@@ -28,7 +28,9 @@ export default class PluginManager {
     public activateFn(s: string) {
         let k;
         if ((k = this.fnnamemap.get(s)) === undefined) {
-            alert("panic: function name not found in activate");
+            alert(
+                "panic: function name not found in activate"
+            );
             return;
         }
         if (k[1] === true) {
@@ -36,12 +38,17 @@ export default class PluginManager {
         }
         k[1] = true;
         this.fnnamemap.set(s, k);
-        return this.offer(this.fnorder[k[0]].onActivate(), k[0] + 1);
+        return this.offer(
+            this.fnorder[k[0]].onActivate(),
+            k[0] + 1
+        );
     }
     public deactivateFn(s: string): any {
         let k;
         if ((k = this.fnnamemap.get(s)) === undefined) {
-            alert("panic: function name not found in deactivate");
+            alert(
+                "panic: function name not found in deactivate"
+            );
             return;
         }
         k[1] = false;
@@ -80,4 +87,7 @@ export default class PluginManager {
         }
         return i;
     }
+
+    // TODO: some function to pass JSON fetched from the websocket
+    // through all the plugins in case they need postprocessing
 }

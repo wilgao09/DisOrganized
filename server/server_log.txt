@@ -1,0 +1,10 @@
+2023/06/08 13:58:44 starting server
+2023/06/08 13:58:44 Spawning stdio listeners
+2023/06/08 13:58:44 server running on 11326
+2023/06/08 22:34:27 starting server
+2023/06/08 22:34:27 Spawning stdio listeners
+2023/06/08 22:34:27 server running on 11326
+2023/06/08 22:34:37 Bad input: EOF
+2023/06/08 23:26:10 starting server
+2023/06/08 23:26:10 Spawning stdio listeners
+2023/06/08 23:26:10 server running on 11326

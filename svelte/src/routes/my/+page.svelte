@@ -1,6 +1,7 @@
 <script>
     import { browser } from "$app/environment";
     import { onMount } from "svelte";
+    import { goto } from "$app/navigation";
 
     if (browser && window.electronAPI !== undefined) {
         window.electronAPI.ping();
@@ -15,6 +16,8 @@
      */
     let boards = [];
 
+    let selectedBoard = "";
+
     onMount(async function () {
         boards =
             await window.electronAPI.getAvailableBoards();
@@ -27,12 +30,45 @@
         <button> Dolor </button>
     </div>
     <div class="file-area" bind:this={fileArea}>
+        <!-- //TODO: a11y stuff here-->
         {#each boards as b}
-            <div class="file-tile">{b}</div>
+            <div
+                class={"file-tile" +
+                    (b == selectedBoard
+                        ? " selected-file-tile"
+                        : "")}
+                on:click={() => {
+                    if (selectedBoard === b) {
+                        selectedBoard = "";
+                    } else {
+                        selectedBoard = b;
+                    }
+                }}
+            >
+                {b}
+            </div>
         {/each}
     </div>
     <div class="option-bar">
-        <button> START </button>
+        <!-- //TODO: make neat-->
+        <button
+            on:click={() => {
+                let sboard = selectedBoard;
+                if (sboard != "") {
+                    window.electronAPI
+                        .openBoard(sboard)
+                        .then((v) => {
+                            if (v == "") {
+                                goto(`/board`, {
+                                    replaceState: false,
+                                });
+                            }
+                        });
+                }
+            }}
+        >
+            START
+        </button>
         <button> EDIT NAME </button>
         <button> EDIT CONFIG </button>
     </div>
@@ -72,6 +108,11 @@
         margin-left: 2%;
         margin-right: 2%;
         background-color: antiquewhite;
+    }
+
+    /* TODO: nicer styling */
+    .selected-file-tile {
+        background-color: aqua;
     }
 
     .option-bar {

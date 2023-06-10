@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	db "williamgao09/disorganized/db"
 )
 
 var IPCStatus = struct {
@@ -41,6 +42,7 @@ func IpcListen() {
 			log.Fatalf("Bad input: %s", e)
 			continue
 		}
+		s = s[:len(s)-1]
 		log.Printf("New raw: <%s> len %d\n", s, len(s))
 		cmd, bod := parseIPCComand(s)
 		switch cmd {
@@ -81,6 +83,26 @@ func IpcListen() {
 				ipcSend(CREATE_BOARD, "0")
 			}
 			goto next
+		case OPEN_BOARD:
+			bpath := fmt.Sprintf("%s/%s", GetWorkingDirectory(), bod)
+			err := db.Init(bpath)
+			if err != nil {
+				log.Printf("Failed to find board at %s", bpath)
+				ipcSend(OPEN_BOARD, "Failed to find board")
+			}
+			log.Printf("Found board at %s\n", bpath)
+			dodb, err := db.Init_struct()
+			if err != nil {
+				log.Printf("Found board, but failed to open\n")
+				log.Printf("%s\n", err)
+				ipcSend(OPEN_BOARD, "Failed to open board")
+			}
+			db.SetCurrentOpenBoard(dodb)
+			ipcSend(OPEN_BOARD, "")
+			goto next
+
+		case CLOSE_BOARD:
+			db.CloseBoard()
 		default:
 			log.Printf("Unrecognized command %d", cmd)
 		}

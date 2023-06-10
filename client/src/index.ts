@@ -43,7 +43,6 @@ app.whenReady().then(() => {
         //pass it to the server
         console.log("pass to server: " + msg);
         goserver.stdin.write(msg + "\n");
-        // goserver.stdin.end();
     });
 
     console.log("spawn webserver");

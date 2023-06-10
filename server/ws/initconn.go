@@ -15,13 +15,15 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(_ *http.Request) bool { return true }, //TODO: SEVERE remove this
 }
 
-func GetConnectionsStruct() Connections {
-	return currconnections
+func GetConnectionsStruct() *Connections {
+	return &currconnections
 }
 
 func Init() {
-	currconnections = CreateConnectionsStruct()
+	currconnections = *CreateConnectionsStruct()
 	// handelrs here
+
+	
 }
 
 // listenws continually listens to a websocket. This function does not return.
@@ -42,6 +44,7 @@ func listenws(c *websocket.Conn) {
 			log.Println("Got 0 length msg")
 			continue
 		}
+		log.Printf("got a message: <%s>\n", msg)
 
 		//TODO: modularize and pray that the compiler optimizes this
 		handlerno := int([]rune(msg)[0]) - 32 //32 is ws

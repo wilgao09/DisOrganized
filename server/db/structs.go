@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"sync"
 )
 
 type DbConfigFile struct {
@@ -13,6 +14,7 @@ type DoDb struct {
 	name   string
 	dbref  *sql.DB
 	config DbConfigFile
+	lock   *sync.Mutex
 }
 
 type DiffType uint

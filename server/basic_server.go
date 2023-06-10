@@ -6,11 +6,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
+	"williamgao09/disorganized/db"
 	ipcutil "williamgao09/disorganized/ipc"
 	wsutil "williamgao09/disorganized/ws"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 const portno = 11326
@@ -70,6 +73,7 @@ func main() {
 
 	// initialize ws stuff
 	wsutil.Init()
+	setUpWSHandlers()
 
 	log.Println("starting server")
 	gin.SetMode(gin.ReleaseMode)
@@ -93,16 +97,18 @@ func main() {
 	// server.POST("/api/diff/:name")
 
 	server.GET("/connectws/:name", func(ctx *gin.Context) {
+
 		log.Println("Requesting permission from admin . . .")
-		if ipcutil.NewConnectionRequest(ctx.Param("name"), getRequestIP(ctx.Request)) {
+		if db.HasOpenBoard() && ipcutil.NewConnectionRequest(ctx.Param("name"), getRequestIP(ctx.Request)) {
 			wsutil.EstablishConnection(ctx.Writer, ctx.Request, ctx.Param("name"))
 		} else {
+			// TODO: this doesnt tell the client anything because websocket connection fails
+			// were designed to fail silently for security reasons
+			// FIX THIS by connecting and sending the failure reason and closing up
 			ctx.JSON(403, gin.H{
 				"msg": "Admin refused",
 			})
 		}
-		// ws.EstablishConnection(ctx.Writer, ctx.Request, "h")
-
 	})
 
 	log.Printf("Spawning stdio listeners\n")
@@ -119,4 +125,44 @@ func getRequestIP(req *http.Request) string {
 		return clientIp
 	}
 	return req.RemoteAddr
+}
+
+// TODO: everything below here needs to be organized
+
+const ( // TODO: dont make these globals like this
+	MESSAGE = iota
+	FETCH
+	CREATE
+
+	// ERR = 127
+)
+
+func setUpWSHandlers() {
+	connstruct := wsutil.GetConnectionsStruct()
+	connstruct.AddHandler(MESSAGE, func(c *websocket.Conn, s string) {
+		for _, udata := range connstruct.GetUserData() {
+			wsutil.WriteMessageToUserDataStruct(udata, 0, s)
+		}
+	})
+
+	connstruct.AddHandler(FETCH, func(c *websocket.Conn, s string) {
+		currobjs, err := db.GetCurrentOpenBoard().GetObjects()
+		if err != nil {
+			wsutil.WriteMessageToUserConn(c, 127, "Failed to fetch")
+			return
+		}
+		wsutil.WriteMessageToUserConn(c, 1, fmt.Sprintf(
+			"[%s]", strings.Join(currobjs, ",")))
+	})
+
+	connstruct.AddHandler(CREATE, func(c *websocket.Conn, s string) {
+		if s, status := db.GetCurrentOpenBoard().AddObject(s); status {
+			for _, udata := range connstruct.GetUserData() {
+				wsutil.WriteMessageToUserDataStruct(udata, 2, s)
+			}
+		} else {
+			wsutil.WriteMessageToUserConn(c, 127, "Failed to add")
+		}
+
+	})
 }

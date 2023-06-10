@@ -1,8 +1,16 @@
+export enum WSMessageCode {
+    MESSAGE = 0,
+    FETCH = 1,
+    CREATE = 2,
+}
+
 interface SocketMessage {
-    msgType: number;
+    msgType: WSMessageCode;
     msg: string;
 }
 
+// takes a connection url and a handler for all future connections
+// returns a callback that sends messages over the connection
 export function opensocket(
     address: string,
     cb: (_: SocketMessage) => void

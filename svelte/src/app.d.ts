@@ -11,7 +11,9 @@ declare global {
         electronAPI: {
             ping: () => void;
             getAvailableBoards: () => Promise<string[]>;
+            openBoard: (name: string) => Promise<string>;
         };
+        boardSocket: (msg: SocketMessage) => void;
     }
 
     interface Point {

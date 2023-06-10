@@ -32,7 +32,6 @@
         />
         <input type="button" value="Quit" class="sbutton" />
     </div>
-    <a href="/board/65"> go to board 65</a>
 </section>
 
 <style>

@@ -1,14 +1,6 @@
 <script>
     import { declName, destIp, destPort } from "$lib/store";
-    import { onMount } from "svelte";
 
-    onMount(() => {
-        destIp.subscribe((v) => {
-            if (v === "SECRETKEY") {
-                destIp.set(window.location.hostname);
-            }
-        });
-    });
 </script>
 
 <section>
@@ -22,6 +14,6 @@
 
     <button>
         <!-- //TODO: board names -->
-        <a href={`/board/boardname`}> Go </a>
+        <a href={`/board`}> Go </a>
     </button>
 </section>

@@ -8,8 +8,12 @@ export default class DrawingEngine {
     private isDrawing: boolean;
     private svgElements: Map<number, Element>;
 
-    public static readonly svgns: string = "http://www.w3.org/2000/svg";
-    constructor(ctx: CanvasRenderingContext2D, svg: SVGSVGElement) {
+    public static readonly svgns: string =
+        "http://www.w3.org/2000/svg";
+    constructor(
+        ctx: CanvasRenderingContext2D,
+        svg: SVGSVGElement
+    ) {
         this.ctx = ctx;
         this.svg = svg;
         this.isDrawing = false;
@@ -37,14 +41,24 @@ export default class DrawingEngine {
             }
         } else if (ev.type === "pointermove") {
             if (this.isDrawing) {
-                console.log("line to " + ev.clientX + " " + ev.clientY);
+                console.log(
+                    "line to " +
+                        ev.clientX +
+                        " " +
+                        ev.clientY
+                );
                 this.ctx.lineTo(ev.clientX, ev.clientY);
                 this.ctx.stroke();
             }
         }
     }
 
-    public clearRect(x0: number, y0: number, w: number, h: number) {
+    public clearRect(
+        x0: number,
+        y0: number,
+        w: number,
+        h: number
+    ) {
         this.ctx.clearRect(x0, y0, w, h);
     }
 
@@ -55,12 +69,22 @@ export default class DrawingEngine {
 
     public drawSVGJSON(o: SVGJSON) {
         let k: Element; // TODO: wtf is this
-        k = document.createElementNS(DrawingEngine.svgns, o.tag);
+        k = document.createElementNS(
+            DrawingEngine.svgns,
+            o.tag
+        );
         for (const [key, val] of Object.entries(o)) {
             if (key === "id" || key === "tag") continue;
             k.setAttribute(key, val);
         }
         console.log(k);
         this.addSVG(o.id, k);
+    }
+
+    public clearAll() {
+        for (let k of this.svgElements.keys()) {
+            this.svgElements.get(k)?.remove();
+            this.svgElements.delete(k);
+        }
     }
 }
