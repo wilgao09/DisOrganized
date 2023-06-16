@@ -10,12 +10,15 @@ import (
 
 type IPCCommand int
 
+// check the db version
 type configFileFormat struct {
-	Plugins []string
+	Plugins  []string
+	Keybinds []string
 }
 
 var defaultConfigFile = configFileFormat{
-	Plugins: []string{"box", "brush"},
+	Plugins:  []string{"Rect", "Brush", "Poly"},
+	Keybinds: []string{"b", "true", "s"},
 }
 
 const (
@@ -37,8 +40,13 @@ const (
 	CLOSE_BOARD
 )
 
-var currentWorkingDirectory, _ = filepath.Abs("%appdata%/DisOrganized/boards")
-var pluginDirectory, _ = filepath.Abs("%appdata/DisOrganized/plugins")
+var currentWorkingDirectory string
+var pluginDirectory string
+
+func GetPluginsDirectory() string {
+
+	return pluginDirectory
+}
 
 func NewConnectionRequest(name string, ip string) bool {
 	log.Println("Making request for entry")
@@ -69,6 +77,23 @@ func SetCurrentWorkingDirectory(p string) bool {
 		return false
 	}
 	currentWorkingDirectory = np
+	fmt.Printf(("succeeded\n"))
+	return true
+}
+
+func SetCurrentPluginDirectory(p string) bool {
+	fmt.Printf("trying to write out %s\n", p)
+	np, err := filepath.Abs(p)
+	if err != nil {
+		return false
+	}
+	fmt.Printf("trying to write out %s\n", np)
+	if os.MkdirAll(np, os.ModePerm) != nil {
+		fmt.Printf("Failed\n")
+		fmt.Print(err)
+		return false
+	}
+	pluginDirectory = np
 	fmt.Printf(("succeeded\n"))
 	return true
 }
@@ -111,6 +136,8 @@ func GetAvailableBoards() []string {
 }
 
 func CreateBoard(name string) bool {
+	// validate that the plugins directory is still valid
+	os.MkdirAll(pluginDirectory, os.ModePerm)
 
 	// does the name exist already?
 	file, err := os.OpenFile(fmt.Sprintf("%s/%s/config.json", currentWorkingDirectory, name), os.O_RDONLY, 0644)

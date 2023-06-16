@@ -27,7 +27,21 @@
 <section class="menu">
     <div class="heading">
         <span> Lorem Ipsum</span>
-        <button> Dolor </button>
+        <button
+            on:click={async () => {
+                let succ =
+                    await window.electronAPI.createBoard(
+                        "NewBoard"
+                    );
+                if (!succ) {
+                    alert("FAILED TO MAKE BOARD");
+                }
+                boards =
+                    await window.electronAPI.getAvailableBoards();
+            }}
+        >
+            New Board
+        </button>
     </div>
     <div class="file-area" bind:this={fileArea}>
         <!-- //TODO: a11y stuff here-->

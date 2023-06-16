@@ -45,6 +45,7 @@ func CreateConnectionsStruct() *Connections {
 }
 
 func (cs *Connections) AddConnection(c *websocket.Conn, name string) (int, uint64) {
+	// TODO: more secure cookies
 	uid, cookie := cs.next_id, rand.Uint64()
 	udt := UserData{
 		conn:   c,

@@ -13,7 +13,8 @@ interface SocketMessage {
 // returns a callback that sends messages over the connection
 export function opensocket(
     address: string,
-    cb: (_: SocketMessage) => void
+    cb: (_: SocketMessage) => void,
+    oncomplete: () => void
 ): (_: SocketMessage) => void {
     if (
         window === undefined ||
@@ -39,6 +40,7 @@ export function opensocket(
         };
         cb(m);
     };
+    oncomplete();
     return (nmsg: SocketMessage) => {
         let s =
             String.fromCharCode(nmsg.msgType + 32) +

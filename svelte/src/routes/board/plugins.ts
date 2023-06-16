@@ -14,11 +14,13 @@ export default class PluginManager {
 
     public addFn(p: PluginFn) {
         if (this.fnorder[p.fnPrio] !== undefined) {
-            alert("panic: function priority collision");
+            console.error(
+                "panic: function priority collision"
+            );
             return;
         }
         if (this.fnnamemap.get(p.fnName) !== undefined) {
-            alert("panic: function name collision");
+            console.error("panic: function name collision");
             return;
         }
         this.fnorder[p.fnPrio] = p;
@@ -28,7 +30,7 @@ export default class PluginManager {
     public activateFn(s: string) {
         let k;
         if ((k = this.fnnamemap.get(s)) === undefined) {
-            alert(
+            console.error(
                 "panic: function name not found in activate"
             );
             return;
@@ -46,7 +48,7 @@ export default class PluginManager {
     public deactivateFn(s: string): any {
         let k;
         if ((k = this.fnnamemap.get(s)) === undefined) {
-            alert(
+            console.error(
                 "panic: function name not found in deactivate"
             );
             return;

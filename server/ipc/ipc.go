@@ -28,11 +28,6 @@ func IpcListen() {
 
 	// do some prepwork here
 	// make sure the directory exists
-	home, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal("cannot read user home")
-	}
-	SetCurrentWorkingDirectory(home + "/DisOrganized/boards")
 
 	reader := bufio.NewReader(os.Stdin)
 	IPCStatus.hasValue.Lock()

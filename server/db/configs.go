@@ -8,6 +8,7 @@ func (cfg *DbConfigFile) Init() {
 	})
 }
 
+// TODO: remove this; the dependencies dont need to be in any particular order
 func (cfg *DbConfigFile) AddDependency(dep string) bool {
 	// insert via bin
 	var l, r, mid int

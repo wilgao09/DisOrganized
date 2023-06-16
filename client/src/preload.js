@@ -95,6 +95,17 @@ contextBridge.exposeInMainWorld("electronAPI", {
             true
         );
     },
+    createBoard: (name) => {
+        return ea.queue
+            .send(ea.commands.CREATE_BOARD, name, true)
+            .then((res) => {
+                if (res == "1") {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+    },
 });
 
 // receiving end in the realworld

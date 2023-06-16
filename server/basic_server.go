@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"williamgao09/disorganized/db"
 	ipcutil "williamgao09/disorganized/ipc"
 	wsutil "williamgao09/disorganized/ws"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -39,6 +41,16 @@ func main() {
 	defer f.Close()
 
 	log.SetOutput(f)
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal("cannot read user home")
+	}
+	ipcutil.SetCurrentWorkingDirectory(home + "/DisOrganized/boards")
+	ipcutil.SetCurrentPluginDirectory(home + "/DisOrganized/plugins")
+
+	log.Printf("Plugins directory is set to %s\n", ipcutil.GetPluginsDirectory())
+
 	// fmt.Printf("hello world\n")
 
 	// err := dbutil.Init("../../..")
@@ -74,12 +86,25 @@ func main() {
 	// initialize ws stuff
 	wsutil.Init()
 	setUpWSHandlers()
+	os.MkdirAll(ipcutil.GetPluginsDirectory(), os.ModePerm)
 
 	log.Println("starting server")
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = ioutil.Discard
 
 	server := gin.Default()
+
+	server.Use(cors.New(cors.Config{
+		AllowOrigins:  []string{"*"}, // TODO: can we do better?
+		AllowMethods:  []string{"GET"},
+		AllowHeaders:  []string{"Origin"},
+		ExposeHeaders: []string{"Content-Length"},
+		// AllowCredentials: true,
+		// AllowOriginFunc: func(origin string) bool {
+		// 	return origin == "https://github.com"
+		// },
+		MaxAge: 12 * time.Hour,
+	}))
 
 	server.GET("/helloworld", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
@@ -109,6 +134,13 @@ func main() {
 				"msg": "Admin refused",
 			})
 		}
+	})
+
+	// TODO: add security
+	server.StaticFS("/plugins", http.Dir(ipcutil.GetPluginsDirectory()))
+	server.GET("/config", func(ctx *gin.Context) {
+		returnData := *(db.GetCurrentOpenBoard().GetConfig())
+		ctx.JSON(200, returnData)
 	})
 
 	log.Printf("Spawning stdio listeners\n")

@@ -82,7 +82,9 @@ func Init_struct() (DoDb, error) {
 		return dbstruct, errors.New("failed to read config file at " + name)
 	}
 
-	err = json.Unmarshal(confbytes, &dbstruct.config)
+	dbstruct.config = new(DbConfigFile)
+
+	err = json.Unmarshal(confbytes, dbstruct.config)
 	dbstruct.config.Init()
 	if err != nil {
 		return dbstruct, errors.New("failed to parse config file as json")

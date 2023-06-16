@@ -3,6 +3,7 @@
     import InputManager from "./inputs";
     import DrawingEngine from "./dengine";
     import * as wsutil from "./wsutil";
+    import fetchPlugins from "./pluginfetch";
     import { UserInputs, UserActions } from "./enums";
     import { declName, destIp, destPort } from "$lib/store";
     import { get } from "svelte/store";
@@ -64,18 +65,19 @@
                         de.drawSVGJSON(JSON.parse(m.msg));
                         break;
                 }
+            },
+            () => {
+                setInterval(() => {
+                    window.boardSocket({
+                        msgType: wsutil.WSMessageCode.FETCH,
+                        msg: "",
+                    });
+                }, 30000);
             }
         );
 
-        setInterval(() => {
-            window.boardSocket({
-                msgType: wsutil.WSMessageCode.FETCH,
-                msg: "",
-            });
-        }, 30000);
-        window.boardSocket({
-            msgType: wsutil.WSMessageCode.FETCH,
-            msg: "",
+        fetchPlugins(ph, ih, () => {
+            console.log("done fetching");
         });
     });
 
@@ -101,114 +103,12 @@
     //     }
     // }
 
-    class brush {
-        constructor() {
-            this.strokeColor = "black";
-            this.strokeWidth = "20";
-            this.offer = (
-                /** @type {{ [x: string]: string; tag: string; }} */ x
-            ) => {
-                if (x.tag === "changebrush") {
-                    this.strokeColor = x["strokeColor"];
-                    this.strokeWidth = x["strokeWidth"];
-                } else {
-                    if (x.style === undefined) x.style = "";
-                    x.style += `fill:rgba(0,0,0,0);stroke-width:${this.strokeWidth};stroke:${this.strokeColor}`;
-                }
-                return x;
-            };
-            this.fnName = "brush";
-            this.fnPrio = 99;
-            this.onActivate = () => {};
-            this.onDeactivate = () => {};
-            this.JSONtoSVG = () => {};
-        }
-    }
-
-    class rect {
-        constructor() {
-            this.n = 999;
-            this.e = this.s = this.w = 0;
-            this.offer = (
-                /** @type {{ x: undefined; y: undefined; } | undefined} */ d
-            ) => {
-                if (
-                    d === undefined ||
-                    d.x === undefined ||
-                    d.y === undefined
-                )
-                    return; // this kills the chain so if rect is active, we will only work towards building the rect
-                if (this.n === 999) {
-                    this.n = this.s = d.y;
-                    this.w = this.e = d.x;
-                }
-                // TODO: this is a test plugin and assumes that the coordinate plane is flipped
-                if (d.x < this.w) this.w = d.x;
-                if (d.x > this.e) this.e = d.x;
-                if (d.y < this.n) this.n = d.y;
-                if (d.y > this.s) this.s = d.y;
-            };
-
-            this.fnName = "rect";
-            this.fnPrio = 0;
-            this.onActivate = () => {
-                this.n = 999;
-                this.e = this.s = this.w = 0;
-            };
-            this.onDeactivate = () => {
-                return {
-                    tag: "rect",
-                    x: this.w,
-                    y: this.n,
-                    width: this.e - this.w,
-                    height: this.s - this.n,
-                };
-            };
-            this.JSONtoSVG = () => {
-                // o must be modified in place; this should never return anything
-                // since onDeactivate returns parsable JSON, we dont have to do anything further
-            };
-        }
-    }
-
-    class poly {
-        constructor() {
-            /**
-             * @type {number[][]}
-             */
-            this.buff = [];
-            this.offer = (
-                /** @type {{ x: undefined; y: undefined; } | undefined} */ x
-            ) => {
-                if (
-                    x === undefined ||
-                    x.x === undefined ||
-                    x.y === undefined
-                )
-                    return x;
-                this.buff.push([x.x, x.y]);
-            };
-            this.fnName = "poly";
-            this.fnPrio = 3;
-            this.onActivate = () => (this.buff = []);
-            this.onDeactivate = () => {
-                return {
-                    tag: "polyline",
-                    points: this.buff
-                        .map(([x, y]) => `${x},${y}`)
-                        .join(" "), //TODO: do not ever use this
-                };
-            };
-            this.JSONtoSVG = () => {};
-        }
-    }
-
-    ph.addFn(new rect());
-    ih.addKeyMapping("b", "rect");
-    ph.addFn(new brush());
-    ph.activateFn("brush");
-    ph.addFn(new poly());
-    ih.addKeyMapping("s", "poly");
+    // ph.addFn(new rect());
+    // ih.addKeyMapping("b", "rect");
+    // ph.addFn(new brush());
+    // ph.activateFn("brush");
+    // ph.addFn(new poly());
+    // ih.addKeyMapping("s", "poly");
 
     //  listen to new drawings
     /**
@@ -255,7 +155,6 @@
                 msg: JSON.stringify(m),
                 msgType: wsutil.WSMessageCode.CREATE,
             });
-            // de.drawSVGJSON(m); // THIS IS NOT HOW IT SHOULD BE DONE
         }
     }
 </script>

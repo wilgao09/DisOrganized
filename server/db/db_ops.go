@@ -97,3 +97,7 @@ func (dodb *DoDb) ApplyDiff(diff DbDiff) error {
 		return errors.New("Invalid DiffType " + diff.Dtype.String())
 	}
 }
+
+func (dodb *DoDb) GetConfig() *DbConfigFile {
+	return dodb.config
+}

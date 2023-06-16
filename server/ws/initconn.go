@@ -68,6 +68,7 @@ func EstablishConnection(w http.ResponseWriter, r *http.Request, name string) {
 		log.Println(err)
 		return //TODO: how does this error out?
 	}
+	// returns an id and a cookie
 	currconnections.AddConnection(conn, name)
 
 	listenws(conn)

@@ -6,14 +6,16 @@ import (
 	"sync"
 )
 
+// check the ws version
 type DbConfigFile struct {
-	Plugins []string
+	Plugins  []string
+	Keybinds []string
 }
 
 type DoDb struct {
 	name   string
 	dbref  *sql.DB
-	config DbConfigFile
+	config *DbConfigFile
 	lock   *sync.Mutex
 }
 
