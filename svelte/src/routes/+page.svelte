@@ -2,8 +2,9 @@
     import Banner from "./Banner.svelte";
 
     import { browser } from "$app/environment";
+    import { goto } from "$app/navigation";
 
-    var inElectron = false;
+    var inElectron = true;
 
     if (browser && window.electronAPI !== undefined) {
         window.electronAPI.ping();
@@ -11,26 +12,36 @@
     }
 </script>
 
-<section>
+<section class="main-column">
     <Banner />
     <!-- menu -->
 
     <div class="menu">
-        <button class="lbutton" disabled={!inElectron}>
-            <a href={inElectron ? "/my" : ""}> My </a>
-        </button>
         <!-- <button class = "lbutton"> -->
 
-        <button class="lbutton">
-            <a href="/other"> Other </a>
+        {#if inElectron}
+            <button
+                class="do-button do-bgreen"
+                disabled={!inElectron}
+                on:click={() => {
+                    goto("/my");
+                }}
+            >
+                Start Local Instance
+            </button>
+        {/if}
+        <button
+            class="do-button do-bgreen"
+            on:click={() => {
+                goto("/other");
+            }}
+        >
+            Join Instance
         </button>
 
-        <input
-            type="button"
-            value="Settings"
-            class="sbutton"
-        />
-        <input type="button" value="Quit" class="sbutton" />
+        <button class="do-button do-bgreen">Settings</button
+        >
+        <button class="do-button do-bgreen">Quit</button>
     </div>
 </section>
 
@@ -40,13 +51,16 @@
         padding-right: 25%;
         text-align: center;
 
-        display: grid;
+        display: flex;
+        flex-direction: column;
+
+        /* display: grid;
         row-gap: 8px;
         column-gap: 8px;
-        grid-template-columns: 50% 50%;
+        grid-template-columns: 50% 50%; */
     }
 
-    .lbutton {
+    /* .lbutton {
         grid-column: span 2;
-    }
+    } */
 </style>

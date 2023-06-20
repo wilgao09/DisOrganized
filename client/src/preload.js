@@ -14,6 +14,7 @@ const ea = {
         CREATE_BOARD: 5,
         OPEN_BOARD: 6,
         CLOSE_BOARD: 7,
+        DELETE_BOARD: 8,
     },
     fns: {
         encode: (cmd, str = "") =>
@@ -98,6 +99,17 @@ contextBridge.exposeInMainWorld("electronAPI", {
     createBoard: (name) => {
         return ea.queue
             .send(ea.commands.CREATE_BOARD, name, true)
+            .then((res) => {
+                if (res == "1") {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+    },
+    deleteBoard: (name) => {
+        return ea.queue
+            .send(ea.commands.DELETE_BOARD, name, true)
             .then((res) => {
                 if (res == "1") {
                     return true;

@@ -1,19 +1,58 @@
 <script>
-    import { declName, destIp, destPort } from "$lib/store";
+    import { declName, destIp, destPort } from "$lib/dest";
+    import { get } from "svelte/store";
+    import InputTile from "./InputTile.svelte";
+    import SmallColumnBanner from "$lib/components/SmallColumnBanner.svelte";
+    import { goto } from "$app/navigation";
 
+    /**
+     * @type {string}
+     */
+    let n;
+    /**
+     * @type {string}
+     */
+    let ip;
+    /**
+     * @type {number}
+     */
+    let port;
+    n = get(declName);
+    ip = get(destIp);
+    port = get(destPort);
+    declName.subscribe((nn) => (n = nn));
+    destIp.subscribe((v) => {
+        ip = v;
+    });
+    destPort.subscribe((np) => (port = np));
 </script>
 
-<section>
-    <h3>Connect to other servers</h3>
-    <h5>Declared Name</h5>
-    <input type="text" bind:value={$declName} />
-    <h5>Server Ip</h5>
-    <input type="text" bind:value={$destIp} />
-    <h5>Server Port</h5>
-    <input type="text" bind:value={$destPort} />
+<section class="main-column">
+    <SmallColumnBanner title="Join Instance" />
+    <div class="input-fields">
+        <InputTile
+            prompt="Display Name"
+            storevar={declName}
+        />
+        <InputTile prompt="Server Ip" storevar={destIp} />
+        <InputTile
+            prompt="Server Port"
+            storevar={destPort}
+        />
+    </div>
 
-    <button>
-        <!-- //TODO: board names -->
-        <a href={`/board`}> Go </a>
+    <button
+        class="do-button"
+        on:click={() => {
+            goto("/board");
+        }}
+    >
+        {`Join ${ip}:${port} as ${n}`}
     </button>
 </section>
+
+<style>
+    .input-fields {
+        padding: 8px;
+    }
+</style>

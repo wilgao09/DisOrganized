@@ -1,6 +1,6 @@
 import type InputManager from "./inputs";
 import type PluginManager from "./plugins";
-import { destIp, destPort } from "$lib/store";
+import { destIp, destPort } from "$lib/dest";
 import { get } from "svelte/store";
 
 interface BoardConfigInternal {

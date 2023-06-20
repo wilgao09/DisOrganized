@@ -38,6 +38,8 @@ const (
 	OPEN_BOARD
 	// close a board with the name X
 	CLOSE_BOARD
+	// delete a board with the name X
+	DELETE_BOARD
 )
 
 var currentWorkingDirectory string
@@ -136,8 +138,6 @@ func GetAvailableBoards() []string {
 }
 
 func CreateBoard(name string) bool {
-	// validate that the plugins directory is still valid
-	os.MkdirAll(pluginDirectory, os.ModePerm)
 
 	// does the name exist already?
 	file, err := os.OpenFile(fmt.Sprintf("%s/%s/config.json", currentWorkingDirectory, name), os.O_RDONLY, 0644)
@@ -169,6 +169,11 @@ func CreateBoard(name string) bool {
 	}
 
 	return true
+}
+
+func DeleteBoard(name string) bool {
+	err := os.RemoveAll(fmt.Sprintf("%s/%s", currentWorkingDirectory, name))
+	return err == nil
 }
 
 // OpenBoard is in db

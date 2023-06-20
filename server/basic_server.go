@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -137,7 +138,23 @@ func main() {
 	})
 
 	// TODO: add security
-	server.StaticFS("/plugins", http.Dir(ipcutil.GetPluginsDirectory()))
+	// server.StaticFS("/plugins", http.Dir(ipcutil.GetPluginsDirectory()))
+	server.GET("/plugins/:name", func(ctx *gin.Context) {
+		if path.Ext(ctx.Request.URL.Path) != ".js" {
+			ctx.Writer.WriteHeader(http.StatusNotFound)
+			ctx.Writer.Write([]byte{})
+			return
+		}
+		data, err := os.ReadFile(fmt.Sprintf("%s/%s", ipcutil.GetPluginsDirectory(), ctx.Param("name")))
+		if err != nil {
+			ctx.Writer.WriteHeader(http.StatusNotFound)
+			ctx.Writer.Write([]byte{})
+			return
+		}
+		ctx.Header("Content-Type", "application/javascript")
+		ctx.Writer.Write(data)
+
+	})
 	server.GET("/config", func(ctx *gin.Context) {
 		returnData := *(db.GetCurrentOpenBoard().GetConfig())
 		ctx.JSON(200, returnData)

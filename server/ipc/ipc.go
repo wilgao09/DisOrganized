@@ -98,6 +98,12 @@ func IpcListen() {
 
 		case CLOSE_BOARD:
 			db.CloseBoard()
+		case DELETE_BOARD:
+			if DeleteBoard(bod) {
+				ipcSend(DELETE_BOARD, "1")
+			} else {
+				ipcSend(DELETE_BOARD, "0")
+			}
 		default:
 			log.Printf("Unrecognized command %d", cmd)
 		}

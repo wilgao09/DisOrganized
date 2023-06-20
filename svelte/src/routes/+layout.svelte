@@ -1,5 +1,6 @@
 <script>
-    import { destIp } from "$lib/store";
+    import { destIp } from "$lib/dest";
+    import AlertQueue from "./AlertQueue.svelte";
     import "./styles.css";
     import { onMount } from "svelte";
 
@@ -13,6 +14,7 @@
 </script>
 
 <div id="app">
+    <AlertQueue />
     <main>
         <slot />
     </main>

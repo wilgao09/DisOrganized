@@ -5,7 +5,7 @@
     import * as wsutil from "./wsutil";
     import fetchPlugins from "./pluginfetch";
     import { UserInputs, UserActions } from "./enums";
-    import { declName, destIp, destPort } from "$lib/store";
+    import { declName, destIp, destPort } from "$lib/dest";
     import { get } from "svelte/store";
     import { onMount } from "svelte";
 
@@ -67,6 +67,10 @@
                 }
             },
             () => {
+                window.boardSocket({
+                    msgType: wsutil.WSMessageCode.FETCH,
+                    msg: "",
+                });
                 setInterval(() => {
                     window.boardSocket({
                         msgType: wsutil.WSMessageCode.FETCH,
@@ -81,34 +85,6 @@
         });
     });
 
-    // class strokep {
-    //     constructor() {
-    //         /**
-    //          * @type {any[]}
-    //          */
-    //         this.buffer = [];
-    //         this.offer = (/** @type {any} */ d) => {
-    //             this.buffer.push(d);
-    //         };
-    //         this.fnName = "stroke";
-    //         this.fnPrio = 0;
-    //         this.onActivate = () => {
-    //             this.buffer = [];
-    //         };
-    //         this.onDeactivate = () => {
-    //             return {
-    //                 path: this.buffer,
-    //             };
-    //         };
-    //     }
-    // }
-
-    // ph.addFn(new rect());
-    // ih.addKeyMapping("b", "rect");
-    // ph.addFn(new brush());
-    // ph.activateFn("brush");
-    // ph.addFn(new poly());
-    // ih.addKeyMapping("s", "poly");
 
     //  listen to new drawings
     /**

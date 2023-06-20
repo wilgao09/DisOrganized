@@ -40,7 +40,9 @@ export function opensocket(
         };
         cb(m);
     };
-    oncomplete();
+    ws.onopen = () => {
+        oncomplete();
+    };
     return (nmsg: SocketMessage) => {
         let s =
             String.fromCharCode(nmsg.msgType + 32) +

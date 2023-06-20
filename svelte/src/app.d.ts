@@ -13,6 +13,7 @@ declare global {
             getAvailableBoards: () => Promise<string[]>;
             openBoard: (name: string) => Promise<string>;
             createBoard: (name: string) => Promise<boolean>;
+            deleteBoard: (name: string) => Promise<boolean>;
         };
         boardSocket: (msg: SocketMessage) => void;
     }
