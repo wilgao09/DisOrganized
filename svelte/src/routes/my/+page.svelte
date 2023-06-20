@@ -41,22 +41,6 @@
 
     onMount(async function () {
         fetchBoards();
-        addAlert({
-            type: AlertType.ERROR,
-            msg: "laoded my lol",
-        });
-        addAlert({
-            type: AlertType.ERROR,
-            msg: "laoded my lol 2",
-        });
-        addAlert({
-            type: AlertType.ERROR,
-            msg: "laoded my lol 3",
-        });
-        addAlert({
-            type: AlertType.ERROR,
-            msg: "laoded my lol 4",
-        });
     });
 </script>
 

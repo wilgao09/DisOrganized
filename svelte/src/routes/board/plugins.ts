@@ -1,6 +1,17 @@
+import { writable, type Writable } from "svelte/store";
+import * as wsutil from "./wsutil";
+
 export default class PluginManager {
     private fnorder: Array<PluginFn>;
     private fnnamemap: Map<string, [number, boolean]>; // index and active state
+
+    // some components rely on state changes in plugins
+    // whenever a change is made, this number gets incremented
+    public newChange: Writable<number> = writable(0);
+
+    public notifyChange() {
+        this.newChange.update((x) => x + 1);
+    }
 
     constructor(oldhandler?: PluginManager) {
         if (oldhandler) {
@@ -23,8 +34,11 @@ export default class PluginManager {
             console.error("panic: function name collision");
             return;
         }
+
         this.fnorder[p.fnPrio] = p;
         this.fnnamemap.set(p.fnName, [p.fnPrio, false]);
+
+        this.notifyChange();
     }
 
     public activateFn(s: string) {
@@ -40,6 +54,7 @@ export default class PluginManager {
         }
         k[1] = true;
         this.fnnamemap.set(s, k);
+        this.notifyChange();
         return this.offer(
             this.fnorder[k[0]].onActivate(),
             k[0] + 1
@@ -57,7 +72,7 @@ export default class PluginManager {
         this.fnnamemap.set(s, k);
         let j = this.fnorder[k[0]].onDeactivate();
         console.log(k);
-
+        this.notifyChange();
         return this.offer(j, k[0] + 1);
     }
 
@@ -88,6 +103,21 @@ export default class PluginManager {
             i = t1.offer(i);
         }
         return i;
+    }
+
+    public getFunctionsStatus(): ReadonlyMap<
+        string,
+        [number, boolean]
+    > {
+        return this.fnnamemap;
+    }
+
+    public deactivateAndCommit(fname: string) {
+        let m = this.deactivateFn(fname);
+        window.boardSocket({
+            msg: JSON.stringify(m),
+            msgType: wsutil.WSMessageCode.CREATE,
+        });
     }
 
     // TODO: some function to pass JSON fetched from the websocket

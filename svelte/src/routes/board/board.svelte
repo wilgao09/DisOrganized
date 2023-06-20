@@ -8,6 +8,8 @@
     import { declName, destIp, destPort } from "$lib/dest";
     import { get } from "svelte/store";
     import { onMount } from "svelte";
+    import Settings from "./Settings.svelte";
+    import Toolbar from "./Toolbar.svelte";
 
     let wsurl = `ws://${encodeURIComponent(
         get(destIp)
@@ -85,7 +87,6 @@
         });
     });
 
-
     //  listen to new drawings
     /**
      * @param {PointerEvent} ev
@@ -124,15 +125,13 @@
     function handlekeyup(ev) {
         console.log("up");
         for (let f of ih.getFns(ev.key)) {
-            let m = ph.deactivateFn(f);
-            console.log("deactivated");
-            console.log(m);
-            window.boardSocket({
-                msg: JSON.stringify(m),
-                msgType: wsutil.WSMessageCode.CREATE,
-            });
+            ph.deactivateAndCommit(f);
         }
     }
+
+    /**
+     * @param {string} fname
+     */
 </script>
 
 <div class="ccontain">
@@ -155,6 +154,8 @@
         tabindex="0"
     />
 </div>
+<Settings />
+<Toolbar pluginManager={ph} />
 
 <!--  -->
 

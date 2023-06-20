@@ -8,10 +8,18 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type UserColor string
+
+var userColorPalette []UserColor = []UserColor{
+	"#336699", "#008318", "#B49A67", "#CEB3AB", "#C4C6E7", "#A0C1B9",
+	"#FF37A6", "#FFCAE9", "#5CF64A", "#B56576", "#E56B6F", "#EAAC8B",
+}
+
 type UserData struct {
 	conn   *websocket.Conn
 	cookie uint64
 	name   string
+	color  UserColor
 }
 
 // TODO: i feel like i might open a security hole here
@@ -51,6 +59,7 @@ func (cs *Connections) AddConnection(c *websocket.Conn, name string) (int, uint6
 		conn:   c,
 		cookie: cookie,
 		name:   name,
+		color:  userColorPalette[uid%len(userColorPalette)],
 	}
 	cs.conn_dict[uid] = &udt
 	cs.next_id++

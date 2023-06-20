@@ -1,0 +1,59 @@
+<script>
+    import { onMount } from "svelte";
+    import Tool from "./Tool.svelte";
+    // @ts-ignore
+    import PluginManager from "./plugins";
+
+    /**
+     * @type {PluginManager}
+     */
+    export let pluginManager;
+
+    /**
+     * @type {[string,boolean][]}
+     */
+    let toolsToRender = Array.from(
+        pluginManager.getFunctionsStatus().entries()
+    )
+        .sort((a, b) => a[1][0] - b[1][0])
+        .map((x) => [x[0], x[1][1]]);
+
+    pluginManager.newChange.subscribe((x) => {
+        toolsToRender = Array.from(
+            pluginManager.getFunctionsStatus().entries()
+        )
+            .sort((a, b) => a[1][0] - b[1][0])
+            .map((x) => [x[0], x[1][1]]);
+    });
+</script>
+
+<div class="toolbar">
+    {#each toolsToRender as tool}
+        <Tool
+            name={tool[0]}
+            active={tool[1]}
+            on:click={() => {
+                if (tool[1]) {
+                    pluginManager.deactivateAndCommit(
+                        tool[0]
+                    );
+                } else {
+                    pluginManager.activateFn(tool[0]);
+                }
+            }}
+        />
+    {/each}
+</div>
+
+<style>
+    .toolbar {
+        display: flex;
+        flex-direction: row;
+        position: absolute;
+        bottom: 0px;
+        right: 0px;
+        height: 8%;
+        width: 50rem; /** TODO: measurements of this*/
+        background-color: teal;
+    }
+</style>
