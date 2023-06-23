@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -23,14 +24,29 @@ func Init() {
 	currconnections = *CreateConnectionsStruct()
 	// handelrs here
 
-	
 }
 
 // listenws continually listens to a websocket. This function does not return.
 // When a message arrives through this websocket, it is expected that the message follow
 // the form [byte][msg] where byte is 8 bits denoting what type of message it is, and msg
 // is the message in JSON.
-func listenws(c *websocket.Conn) {
+func listenws(c *websocket.Conn, uid int) {
+	c.SetCloseHandler(func(code int, text string) error {
+		// TODO: make use of the parameters
+
+		// delete the user from the dictionary of users
+		delete(currconnections.conn_dict, uid)
+		// notify all clients to delete the user
+		for k, v := range currconnections.conn_dict {
+			if k != uid {
+				WriteMessageToUserDataStruct(
+					v, 5, fmt.Sprintf("%d", uid),
+				)
+			}
+		}
+		return nil
+	})
+
 	for {
 		msgtype, p, err := c.ReadMessage()
 		if err != nil || msgtype != websocket.TextMessage {
@@ -50,9 +66,9 @@ func listenws(c *websocket.Conn) {
 		handlerno := int([]rune(msg)[0]) - 32 //32 is ws
 
 		if currconnections.handlers[handlerno] == nil {
-			currconnections.defaulthandler(c, handlerno, msg[1:])
+			currconnections.defaulthandler(c, handlerno, uid, msg[1:])
 		} else {
-			currconnections.handlers[handlerno](c, msg[1:])
+			currconnections.handlers[handlerno](c, uid, msg[1:])
 		}
 
 	}
@@ -69,7 +85,17 @@ func EstablishConnection(w http.ResponseWriter, r *http.Request, name string) {
 		return //TODO: how does this error out?
 	}
 	// returns an id and a cookie
-	currconnections.AddConnection(conn, name)
+	uid, _ := currconnections.AddConnection(conn, name)
 
-	listenws(conn)
+	// alert all other users that a new user has joined
+	userdata, _ := GetConnectionsStruct().GetUserData()
+	for _, b := range userdata {
+		WriteMessageToUserDataStruct(
+			// 4 is ADD_USER
+			// TODO: if something breaks, check this
+			b, 4, fmt.Sprintf("%d\v%s", uid, name),
+		)
+	}
+
+	listenws(conn, uid)
 }

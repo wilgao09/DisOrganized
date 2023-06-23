@@ -1,15 +1,16 @@
-<script lang="js">
+<script lang="ts">
     import PluginManger from "./plugins";
     import InputManager from "./inputs";
     import DrawingEngine from "./dengine";
     import * as wsutil from "./wsutil";
     import fetchPlugins from "./pluginfetch";
-    import { UserInputs, UserActions } from "./enums";
+    import { UserInputs, UserActions } from "./userenums";
     import { declName, destIp, destPort } from "$lib/dest";
     import { get } from "svelte/store";
     import { onMount } from "svelte";
     import Settings from "./Settings.svelte";
     import Toolbar from "./Toolbar.svelte";
+    import MultiplayerManager from "./multiplayer";
 
     let wsurl = `ws://${encodeURIComponent(
         get(destIp)
@@ -18,19 +19,24 @@
     )}/connectws/${encodeURIComponent(get(declName))}`;
     let ph = new PluginManger();
     let ih = new InputManager();
+    let mm = new MultiplayerManager();
 
     /**
      * @type {SVGSVGElement}
      */
-    let svgel;
+    let svgel: SVGSVGElement;
+    /**
+     * @type {SVGSVGElement}
+     */
+    let udisplay: SVGSVGElement;
     /**
      * @type {HTMLCanvasElement}
      */
-    let icanvasel;
+    let icanvasel: HTMLCanvasElement;
     /**
      * @type {DrawingEngine}
      */
-    let de;
+    let de: DrawingEngine;
 
     onMount(() => {
         let t = icanvasel.getContext("2d");
@@ -47,30 +53,14 @@
         // with a state variable
         window.boardSocket = wsutil.opensocket(
             wsurl,
-            (m) => {
-                switch (m.msgType) {
-                    case wsutil.WSMessageCode.MESSAGE:
-                        console.log(
-                            `New message: ${m.msg}`
-                        );
-                        break;
-                    case wsutil.WSMessageCode.FETCH:
-                        de.clearAll();
-                        // TODO: needs to be trycaught
-                        let arrOfObj = JSON.parse(m.msg);
-                        for (let someObj of arrOfObj) {
-                            // TODO: postprocessing by plugins
-                            de.drawSVGJSON(someObj);
-                        }
-                        break;
-                    case wsutil.WSMessageCode.CREATE:
-                        de.drawSVGJSON(JSON.parse(m.msg));
-                        break;
-                }
-            },
+            wsutil.defaultMessageHandler(de, mm),
             () => {
                 window.boardSocket({
                     msgType: wsutil.WSMessageCode.FETCH,
+                    msg: "",
+                });
+                window.boardSocket({
+                    msgType: wsutil.WSMessageCode.GET_USERS,
                     msg: "",
                 });
                 setInterval(() => {
@@ -81,7 +71,6 @@
                 }, 30000);
             }
         );
-
         fetchPlugins(ph, ih, () => {
             console.log("done fetching");
         });
@@ -89,18 +78,38 @@
 
     //  listen to new drawings
     /**
-     * @param {PointerEvent} ev
+     * @param {PointerEvent | TouchEvent} ev
      */
-    function handleEvent(ev) {
-        de.handleCursorInput(ev);
+    function handleEvent(ev: PointerEvent | TouchEvent) {
+        let te: TouchEvent;
+        let pe: PointerEvent;
+        let t: Touch | null;
+        // TODO: zoom
         switch (ih.actionType(ev)) {
             case UserActions.PAN:
-                console.log("pan");
+                te = ev as TouchEvent;
+
+                t = te.changedTouches.item(0);
+
+                if (
+                    te.changedTouches.length === 1 &&
+                    t !== null
+                ) {
+                    de.pan(
+                        ih.previousPoint()[0],
+                        ih.previousPoint()[1],
+                        t.clientX,
+                        t.clientY
+                    );
+                }
+
                 break;
             case UserActions.DRAW:
+                pe = ev as PointerEvent;
+                de.handleCursorInput(pe);
                 ph.offer({
-                    x: ev.x,
-                    y: ev.y,
+                    y: pe.y,
+                    x: pe.x,
                 });
                 break;
             case UserActions.SELECT:
@@ -111,18 +120,12 @@
         }
     }
 
-    /**
-     * @param {{ key: string; }} ev
-     */
-    function handlekeydown(ev) {
+    function handlekeydown(ev: KeyboardEvent) {
         console.log("down");
         for (let f of ih.getFns(ev.key)) ph.activateFn(f);
     }
 
-    /**
-     * @param {{ key: string; }} ev
-     */
-    function handlekeyup(ev) {
+    function handlekeyup(ev: KeyboardEvent) {
         console.log("up");
         for (let f of ih.getFns(ev.key)) {
             ph.deactivateAndCommit(f);
@@ -139,8 +142,10 @@
         class="bcanvas"
         width="100%"
         height="100%"
+        viewBox="0 0 600 800"
         bind:this={svgel}
     />
+
     <canvas class="bcanvas" id="dcanvas" />
     <canvas
         class="bcanvas"
@@ -150,11 +155,20 @@
         on:pointerup={handleEvent}
         on:keydown={handlekeydown}
         on:keyup={handlekeyup}
+        on:touchmove={handleEvent}
+        on:touchstart={handleEvent}
+        on:touchend={handleEvent}
         bind:this={icanvasel}
         tabindex="0"
     />
+    <svg
+        class="bcanvas no-interact-canvas"
+        width="100%"
+        height="100%"
+        bind:this={udisplay}
+    />
 </div>
-<Settings />
+<Settings {mm} />
 <Toolbar pluginManager={ph} />
 
 <!--  -->
@@ -170,5 +184,9 @@
         position: absolute;
         /* top: 0px; */
         /* left: 0px; */
+    }
+
+    .no-interact-canvas {
+        pointer-events: none;
     }
 </style>

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"C"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -125,6 +126,7 @@ func main() {
 
 		log.Println("Requesting permission from admin . . .")
 		if db.HasOpenBoard() && ipcutil.NewConnectionRequest(ctx.Param("name"), getRequestIP(ctx.Request)) {
+
 			wsutil.EstablishConnection(ctx.Writer, ctx.Request, ctx.Param("name"))
 		} else {
 			// TODO: this doesnt tell the client anything because websocket connection fails

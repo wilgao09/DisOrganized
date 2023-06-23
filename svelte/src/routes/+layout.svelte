@@ -14,8 +14,8 @@
 </script>
 
 <div id="app">
-    <AlertQueue />
     <main>
         <slot />
     </main>
+    <AlertQueue />
 </div>

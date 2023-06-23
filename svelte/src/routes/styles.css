@@ -35,8 +35,11 @@
     margin-right: auto;
 }
 
+html,
 body {
     margin: 0px;
+    overflow: hidden;
+    overscroll-behavior-x: none;
 }
 
 .do-button {

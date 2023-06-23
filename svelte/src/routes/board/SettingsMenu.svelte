@@ -1,20 +1,39 @@
-<script>
+<script lang="ts">
     import SettingsMenuButton from "./SettingsMenuButton.svelte";
+    import UsersList from "./UsersList.svelte";
+    import type MultiplayerManager from "./multiplayer";
 
-    /**
-     * @type {()=>void}
-     */
-    export let closeFunction;
+    // /**
+    //  * @type {()=>void}
+    //  */
+    export let closeFunction: () => void;
+
+    export let mm: MultiplayerManager;
+
+    // TODO: move this into an external variable
+    let currentPage = "settings";
 </script>
 
-<div class="settings-container">
-    <SettingsMenuButton
-        name="exit"
-        on:click={() => {
-            closeFunction();
-        }}
-    />
-</div>
+{#if currentPage == "settings"}
+    <div class="settings-container">
+        <SettingsMenuButton
+            name="Return to board"
+            on:click={() => {
+                closeFunction();
+            }}
+        />
+        <SettingsMenuButton
+            name="Users List"
+            on:click={() => {
+                currentPage = "users";
+            }}
+        />
+    </div>
+{:else if currentPage == "users"}
+    <UsersList {mm} />
+{:else}
+    <div>shit fuck</div>
+{/if}
 
 <style>
     .settings-container {

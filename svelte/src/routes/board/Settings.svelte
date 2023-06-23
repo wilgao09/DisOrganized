@@ -1,6 +1,8 @@
-<script>
+<script lang="ts">
     import SettingsMenu from "./SettingsMenu.svelte";
+    import type MultiplayerManager from "./multiplayer";
 
+    export let mm: MultiplayerManager;
     let menuOpened = false;
 </script>
 
@@ -17,6 +19,7 @@
     <div class="menu-container">
         <SettingsMenu
             closeFunction={() => (menuOpened = false)}
+            {mm}
         />
     </div>
 {/if}
