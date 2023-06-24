@@ -11,6 +11,7 @@
     import Settings from "./Settings.svelte";
     import Toolbar from "./Toolbar.svelte";
     import MultiplayerManager from "./multiplayer";
+    // import DrawingEngine from "./dengine";
 
     let wsurl = `ws://${encodeURIComponent(
         get(destIp)
@@ -37,11 +38,11 @@
      * @type {DrawingEngine}
      */
     let de: DrawingEngine;
-
+    let boardFrame: Element;
     onMount(() => {
         let t = icanvasel.getContext("2d");
         if (icanvasel !== null && t !== null)
-            de = new DrawingEngine(t, svgel);
+            de = new DrawingEngine(t, svgel, udisplay, mm);
         else
             alert(
                 "panic: drawingengine couldnt be initialized"
@@ -49,6 +50,20 @@
 
         icanvasel.height = window.innerHeight;
         icanvasel.width = window.innerWidth;
+
+        // board dims
+        let ob = new ResizeObserver((entries) => {
+            for (const e of entries) {
+                if (e.target === boardFrame) {
+                    // alert("resized");
+                    console.log(e);
+                    de.resize();
+                }
+            }
+        });
+
+        ob.observe(boardFrame);
+
         // TODO: replace all instances of window.boardsocket
         // with a state variable
         window.boardSocket = wsutil.opensocket(
@@ -84,6 +99,13 @@
         let te: TouchEvent;
         let pe: PointerEvent;
         let t: Touch | null;
+
+        de.trySendPosition(ev);
+
+        let boardLocation = de.eventToBoardCoords(ev);
+
+        // TODO: convert the event into boardcoords and send
+        // over the ws
         // TODO: zoom
         switch (ih.actionType(ev)) {
             case UserActions.PAN:
@@ -108,8 +130,8 @@
                 pe = ev as PointerEvent;
                 de.handleCursorInput(pe);
                 ph.offer({
-                    y: pe.y,
-                    x: pe.x,
+                    y: boardLocation[0][1],
+                    x: boardLocation[0][0],
                 });
                 break;
             case UserActions.SELECT:
@@ -131,17 +153,13 @@
             ph.deactivateAndCommit(f);
         }
     }
-
-    /**
-     * @param {string} fname
-     */
 </script>
 
-<div class="ccontain">
+<div class="ccontain" bind:this={boardFrame}>
+    <!-- width="100%"
+    height="100%" -->
     <svg
         class="bcanvas"
-        width="100%"
-        height="100%"
         viewBox="0 0 600 800"
         bind:this={svgel}
     />
@@ -163,8 +181,7 @@
     />
     <svg
         class="bcanvas no-interact-canvas"
-        width="100%"
-        height="100%"
+        viewBox="0 0 600 800"
         bind:this={udisplay}
     />
 </div>

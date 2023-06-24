@@ -25,6 +25,7 @@ const ( // TODO: dont make these globals like this
 	GET_USERS
 	GET_USER_COLORS
 	POINTER_MOVED
+	GET_MY_DATA
 
 	ERR = 127
 )
@@ -81,8 +82,12 @@ func setUpWSHandlers() {
 			strings.Join(response, "\v"))
 	})
 
+	// NOTE: since this is a function that is user specific
+	// we will prepend the outgoing messages with the sender
+	// id
 	connstruct.AddHandler(POINTER_MOVED, func(c *websocket.Conn, uid int, s string) {
 		userdata, userids := connstruct.GetUserData()
+		s = fmt.Sprintf("%d\v%s", uid, s)
 		// send to everyone but this one
 		for i, someid := range userids {
 			if someid != uid {
@@ -90,5 +95,11 @@ func setUpWSHandlers() {
 			}
 		}
 
+	})
+
+	connstruct.AddHandler((GET_MY_DATA), func(c *websocket.Conn, i int, s string) {
+		data := connstruct.Get(i)
+		wsutil.WriteMessageToUserDataStruct(data,
+			GET_MY_DATA, data.String())
 	})
 }

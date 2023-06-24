@@ -20,6 +20,7 @@ type UserData struct {
 	cookie uint64
 	name   string
 	color  UserColor
+	id     int
 }
 
 // TODO: i feel like i might open a security hole here
@@ -61,6 +62,7 @@ func (cs *Connections) AddConnection(c *websocket.Conn, name string) (int, uint6
 		cookie: cookie,
 		name:   name,
 		color:  UserColorPalette[uid%len(UserColorPalette)],
+		id:     uid,
 	}
 	cs.conn_dict[uid] = &udt
 	cs.next_id++
@@ -81,6 +83,10 @@ func (cs *Connections) GetUserData() ([]*UserData, []int) {
 	return tor, ids
 }
 
+func (cs *Connections) Get(id int) *UserData {
+	return cs.conn_dict[id]
+}
+
 func WriteMessageToUserDataStruct(ud *UserData, id int, s string) {
 	ud.conn.WriteMessage(websocket.TextMessage,
 		[]byte(fmt.Sprintf("%c%s", id+32, s)))
@@ -97,6 +103,16 @@ func (ud *UserData) GetName() string {
 
 func (ud *UserData) GetColor() string {
 	return string(ud.color)
+}
+
+/**
+ * Return a websocket semndable string
+ * Format is the fields separated by \v in the following order:
+ *		cookie, id, name
+ *
+ */
+func (ud *UserData) String() string {
+	return fmt.Sprintf("%d\v%d\v%s", ud.cookie, ud.id, ud.name)
 }
 
 // func (ud *UserData) OwnsConn(c *websocket.Conn) bool {

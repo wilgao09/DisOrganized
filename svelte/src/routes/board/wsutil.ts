@@ -14,12 +14,17 @@ export enum WSMessageCode {
     GET_USERS,
     GET_USER_COLORS,
     POINTER_MOVED,
+    GET_MY_DATA,
 }
 
 interface SocketMessage {
     msgType: WSMessageCode;
     msg: string;
 }
+
+let cookie = "";
+let id = -1;
+let name = "";
 
 // takes a connection url and a handler for all future connections
 // returns a callback that sends messages over the connection
@@ -39,7 +44,6 @@ export function opensocket(
     // TODO: some sort of loading indicator, or a "asking permission" screen here
     var ws = new WebSocket(address); //should be wss
     ws.onmessage = (ev) => {
-        // get only the body
         let d = String(ev.data);
         if (d.length < 1) {
             throw new Error(
@@ -59,6 +63,10 @@ export function opensocket(
         let s =
             String.fromCharCode(nmsg.msgType + 32) +
             nmsg.msg;
+        // get only the body
+        if (ws.readyState !== WebSocket.OPEN) {
+            return; // silently discard
+        }
         ws.send(s);
     };
 }
@@ -78,6 +86,7 @@ export function defaultMessageHandler(
                 // TODO: needs to be trycaught
                 let arrOfObj = JSON.parse(m.msg);
                 for (let someObj of arrOfObj) {
+                    // console.log(someObj);
                     // TODO: postprocessing by plugins
                     de.drawSVGJSON(someObj);
                 }
@@ -111,9 +120,26 @@ export function defaultMessageHandler(
                 data = m.msg.split("\v");
                 mm.cursorMoved(
                     parseInt(data[0]),
-                    parseInt(data[1]),
-                    parseInt(data[2])
+                    parseFloat(data[1]),
+                    parseFloat(data[2])
                 );
+                break;
+            case WSMessageCode.GET_MY_DATA:
+                data = m.msg.split("\v");
+                cookie = data[0];
+                id = parseInt(data[1]);
+                name = data[2];
+                break;
         }
     };
+}
+
+export function getCookie(): string {
+    return cookie;
+}
+export function getId(): number {
+    return id;
+}
+export function getName(): string {
+    return name;
 }

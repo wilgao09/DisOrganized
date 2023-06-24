@@ -71,7 +71,7 @@ export default class PluginManager {
         k[1] = false;
         this.fnnamemap.set(s, k);
         let j = this.fnorder[k[0]].onDeactivate();
-        console.log(k);
+        // console.log(k);
         this.notifyChange();
         return this.offer(j, k[0] + 1);
     }
