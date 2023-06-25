@@ -34,15 +34,28 @@
      * @type {HTMLCanvasElement}
      */
     let icanvasel: HTMLCanvasElement;
+    let dcanvasel: HTMLCanvasElement;
     /**
      * @type {DrawingEngine}
      */
     let de: DrawingEngine;
     let boardFrame: Element;
     onMount(() => {
-        let t = icanvasel.getContext("2d");
-        if (icanvasel !== null && t !== null)
-            de = new DrawingEngine(t, svgel, udisplay, mm);
+        let icanvasctx = icanvasel.getContext("2d");
+        let dcanvasctx = dcanvasel.getContext("2d");
+        if (
+            icanvasel !== null &&
+            icanvasctx !== null &&
+            dcanvasel !== null &&
+            dcanvasctx !== null
+        )
+            de = new DrawingEngine(
+                icanvasel,
+                dcanvasel,
+                svgel,
+                udisplay,
+                mm
+            );
         else
             alert(
                 "panic: drawingengine couldnt be initialized"
@@ -109,6 +122,7 @@
         // TODO: zoom
         switch (ih.actionType(ev)) {
             case UserActions.PAN:
+                de.endDraw();
                 te = ev as TouchEvent;
 
                 t = te.changedTouches.item(0);
@@ -128,14 +142,19 @@
                 break;
             case UserActions.DRAW:
                 pe = ev as PointerEvent;
-                de.handleCursorInput(pe);
+                de.draw(
+                    boardLocation[0][0],
+                    boardLocation[0][1]
+                );
                 ph.offer({
                     y: boardLocation[0][1],
                     x: boardLocation[0][0],
                 });
                 break;
             case UserActions.SELECT:
+                de.endDraw();
                 console.log("select");
+
                 break;
             default:
                 break;
@@ -164,7 +183,11 @@
         bind:this={svgel}
     />
 
-    <canvas class="bcanvas" id="dcanvas" />
+    <canvas
+        class="bcanvas"
+        id="dcanvas"
+        bind:this={dcanvasel}
+    />
     <canvas
         class="bcanvas"
         id="icanvas"
