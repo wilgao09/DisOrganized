@@ -59,7 +59,6 @@
                 icanvasel,
                 dcanvasel,
                 svgel,
-                udisplay,
                 mm
             );
         else
@@ -201,22 +200,6 @@
         class="bcanvas"
         viewBox="0 0 600 800"
         bind:this={svgel}
-    />
-
-    <canvas
-        class="bcanvas"
-        id="dcanvas"
-        bind:this={dcanvasel}
-    />
-    <canvas
-        class="bcanvas"
-        id="icanvas"
-        bind:this={icanvasel}
-    />
-    <svg
-        class="bcanvas"
-        viewBox="0 0 600 800"
-        bind:this={udisplay}
         on:pointerdown={handleEvent}
         on:pointermove={handleEvent}
         on:pointerup={handleEvent}
@@ -226,6 +209,23 @@
         on:touchstart={handleEvent}
         on:touchend={handleEvent}
     />
+
+    <canvas
+        class="bcanvas no-interact-canvas"
+        id="dcanvas"
+        bind:this={dcanvasel}
+    />
+    <canvas
+        class="bcanvas no-interact-canvas"
+        id="icanvas"
+        bind:this={icanvasel}
+    />
+    <!-- <svg
+        class="bcanvas"
+        viewBox="0 0 600 800"
+        bind:this={udisplay}
+
+    /> -->
 </div>
 <Settings {mm} />
 <Toolbar pluginManager={ph} />
@@ -249,7 +249,7 @@
         /* left: 0px; */
     }
 
-    /* .no-interact-canvas {
+    .no-interact-canvas {
         pointer-events: none;
-    } */
+    }
 </style>

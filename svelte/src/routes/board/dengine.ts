@@ -21,7 +21,7 @@ export default class DrawingEngine {
     private isDrawing: boolean;
     private svgElements: Map<number, Element>;
 
-    private userCursors: SVGSVGElement;
+    // private userCursors: SVGSVGElement;
     private userCursorElements: Map<
         number,
         [SVGCircleElement, SVGRectElement, SVGTextElement]
@@ -43,7 +43,7 @@ export default class DrawingEngine {
         displayCanvas: HTMLCanvasElement,
 
         svg: SVGSVGElement,
-        usersvg: SVGSVGElement,
+        // usersvg: SVGSVGElement,
         mm: MultiplayerManager
     ) {
         // try to get contexts
@@ -89,7 +89,7 @@ export default class DrawingEngine {
             this.readySendPos = true;
         }, CURSOR_REFRESH);
 
-        this.userCursors = usersvg;
+        // this.svg = usersvg;
         this.userCursorElements = new Map();
 
         // this.centerel = this.buildCursorNode("#e0f125");
@@ -98,9 +98,8 @@ export default class DrawingEngine {
         this.svg.viewBox.baseVal.width = window.innerWidth;
         this.svg.viewBox.baseVal.height =
             window.innerHeight;
-        this.userCursors.viewBox.baseVal.width =
-            window.innerWidth;
-        this.userCursors.viewBox.baseVal.height =
+        this.svg.viewBox.baseVal.width = window.innerWidth;
+        this.svg.viewBox.baseVal.height =
             window.innerHeight;
 
         // sizing for canvas elements
@@ -243,7 +242,7 @@ export default class DrawingEngine {
             `fill: ${color}; stroke: ${color}; stroke-width: 1px;`
         );
 
-        this.userCursors.appendChild(bubble);
+        this.svg.appendChild(bubble);
 
         let np: SVGTextElement = document.createElementNS(
             DrawingEngine.svgns,
@@ -257,7 +256,7 @@ export default class DrawingEngine {
             `font: 12px sans-serif; color:black;`
         );
         np.innerHTML = name;
-        this.userCursors.appendChild(np);
+        this.svg.appendChild(np);
 
         let textBoxSize = np.getBBox();
         np.setAttributeNS(
@@ -297,7 +296,7 @@ export default class DrawingEngine {
             })`
         );
 
-        this.userCursors.appendChild(backingbox);
+        this.svg.appendChild(backingbox);
 
         bubble.addEventListener("pointerdown", () => {
             showing = !showing;
@@ -605,13 +604,13 @@ export default class DrawingEngine {
         this.svg.viewBox.baseVal.width *= factor;
         this.svg.viewBox.baseVal.height *= factor;
 
-        this.userCursors.viewBox.baseVal.x =
+        this.svg.viewBox.baseVal.x =
             this.svg.viewBox.baseVal.x;
-        this.userCursors.viewBox.baseVal.y =
+        this.svg.viewBox.baseVal.y =
             this.svg.viewBox.baseVal.y;
-        this.userCursors.viewBox.baseVal.width =
+        this.svg.viewBox.baseVal.width =
             this.svg.viewBox.baseVal.width;
-        this.userCursors.viewBox.baseVal.height =
+        this.svg.viewBox.baseVal.height =
             this.svg.viewBox.baseVal.height;
         //TODO: redraw canvas items
     }
@@ -643,8 +642,8 @@ export default class DrawingEngine {
         this.svg.viewBox.baseVal.x += dx;
         this.svg.viewBox.baseVal.y += dy;
 
-        this.userCursors.viewBox.baseVal.x += dx;
-        this.userCursors.viewBox.baseVal.y += dy;
+        // this.svg.viewBox.baseVal.x += dx;
+        // this.svg.viewBox.baseVal.y += dy;
         //TODO: redraw display canvas
         //move coordinate system
         // this.displayCtx.transform(
@@ -652,16 +651,16 @@ export default class DrawingEngine {
         //     0,
         //     0,
         //     1,
-        //     -1 * this.userCursors.viewBox.baseVal.x,
-        //     -1 * this.userCursors.viewBox.baseVal.y
+        //     -1 * this.svg.viewBox.baseVal.x,
+        //     -1 * this.svg.viewBox.baseVal.y
         // );
         this.drawCtx.setTransform(
             1,
             0,
             0,
             1,
-            -1 * this.userCursors.viewBox.baseVal.x,
-            -1 * this.userCursors.viewBox.baseVal.y
+            -1 * this.svg.viewBox.baseVal.x,
+            -1 * this.svg.viewBox.baseVal.y
         );
         //clear the board
         // TODO: more narrow
@@ -766,20 +765,19 @@ export default class DrawingEngine {
     public resize() {
         this.xcenter +=
             (window.innerWidth -
-                this.userCursors.viewBox.baseVal.width) /
+                this.svg.viewBox.baseVal.width) /
             2;
         this.ycenter +=
             (window.innerHeight -
-                this.userCursors.viewBox.baseVal.height) /
+                this.svg.viewBox.baseVal.height) /
             2;
 
         this.svg.viewBox.baseVal.width = window.innerWidth;
         this.svg.viewBox.baseVal.height =
             window.innerHeight;
 
-        this.userCursors.viewBox.baseVal.width =
-            window.innerWidth;
-        this.userCursors.viewBox.baseVal.height =
+        this.svg.viewBox.baseVal.width = window.innerWidth;
+        this.svg.viewBox.baseVal.height =
             window.innerHeight;
 
         // TODO: replace canvas resizing; use offscreencanvas so that drawings arent erased
