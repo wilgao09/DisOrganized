@@ -173,4 +173,8 @@ export default class InputManager {
     public previousPoint(): Readonly<[number, number]> {
         return this.prevLocation;
     }
+
+    public currentPoint(): Readonly<[number, number]> {
+        return this.currLocation;
+    }
 }

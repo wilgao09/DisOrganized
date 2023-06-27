@@ -22,7 +22,10 @@ export default class DrawingEngine {
     private svgElements: Map<number, Element>;
 
     private userCursors: SVGSVGElement;
-    private userCursorElements: Map<number, Element>;
+    private userCursorElements: Map<
+        number,
+        [SVGCircleElement, SVGRectElement, SVGTextElement]
+    >;
 
     private xcenter: number;
     private ycenter: number;
@@ -111,88 +114,202 @@ export default class DrawingEngine {
 
         this.mm.userMappingUpdate //TODO: make the cursors disappear after 15s // TODO:
             .subscribe((_) => {
-                for (let [k, v] of mm.getAllUserData()) {
-                    if (
-                        this.userCursorElements.get(k) ===
-                        undefined
-                    ) {
-                        //create elements
-                        let nel = this.buildCursorNode(
-                            mm.getColor(k)
-                        );
-                        this.userCursorElements.set(k, nel);
-                    }
-                    let storedel =
-                        this.userCursorElements.get(k);
-                    if (storedel === undefined) {
-                        continue; // this should never happen
-                    }
-                    // diff the stored version and the new version
-                    let storedx = storedel?.getAttributeNS(
-                        null,
-                        "cx"
-                    );
-                    let storedy = storedel?.getAttributeNS(
-                        null,
-                        "cy"
-                    );
-                    if (
-                        storedx === null ||
-                        storedy === null ||
-                        v.x !== parseFloat(storedx) ||
-                        v.y !== parseFloat(storedy)
-                    ) {
-                        // let lastx: string;
-                        // let lasty: string;
-                        // if (storedx === null) {
-                        //     lastx = "" + v.x;
-                        // } else {
-                        //     lastx = storedx;
-                        // }
-                        storedel.animate(
-                            [
-                                {
-                                    cx: storedx,
-                                    cy: storedy,
-                                },
-                                { cx: v.x, cy: v.y },
-                            ],
-                            {
-                                duration: CURSOR_REFRESH,
-                                easing: "cubic-bezier(0, 0, 0.2, 1)",
-                            }
-                        );
-                        storedel.setAttributeNS(
-                            null,
-                            "cx",
-                            `${v.x}`
-                        );
-                        storedel.setAttributeNS(
-                            null,
-                            "cy",
-                            `${v.y}`
-                        );
-                    }
-                }
+                this.checkCursorBubbleRefresh();
             });
     }
 
-    private buildCursorNode(color: string): Element {
-        let retel = document.createElementNS(
+    private checkCursorBubbleRefresh() {
+        for (let [k, v] of this.mm.getAllUserData()) {
+            if (
+                this.userCursorElements.get(k) === undefined
+            ) {
+                //create elements
+                let nel = this.buildCursorNode(
+                    this.mm.getColor(k),
+                    v.name
+                );
+                this.userCursorElements.set(k, nel);
+            }
+            let els = this.userCursorElements.get(k);
+            if (els === undefined) {
+                continue; // this should never happen
+            }
+            let locx = parseFloat(
+                els[0].getAttributeNS(null, "cx") as string
+            );
+            let locy = parseFloat(
+                els[0].getAttributeNS(null, "cy") as string
+            );
+            if (locy === v.y && locx === v.x) {
+                continue;
+            }
+            this.animateTriplet(
+                ...els,
+                locx,
+                locy,
+                v.x,
+                v.y
+            );
+        }
+    }
+
+    // TODO: make this more slick
+    private animateTriplet(
+        bubble: SVGCircleElement,
+        backing: SVGRectElement,
+        np: SVGTextElement,
+        prevX: number,
+        prevY: number,
+        postX: number,
+        postY: number
+    ) {
+        bubble.animate(
+            [
+                {
+                    cx: prevX.toString(),
+                    cy: prevY.toString(),
+                },
+                {
+                    cx: postX.toString(),
+                    cy: postY.toString(),
+                },
+            ],
+            {
+                duration: CURSOR_REFRESH,
+                easing: "cubic-bezier(0, 0, 0.2, 1)",
+            }
+        );
+        bubble.setAttributeNS(null, "cx", `${postX}`);
+        bubble.setAttributeNS(null, "cy", `${postY}`);
+        np.animate(
+            [
+                {
+                    x: prevX.toString(),
+                    y: (prevY - 40).toString(),
+                },
+                {
+                    x: postX.toString(),
+                    y: (postY - 40).toString(),
+                },
+            ],
+            {
+                duration: CURSOR_REFRESH,
+                easing: "cubic-bezier(0, 0, 0.2, 1)",
+            }
+        );
+        np.setAttributeNS(null, "x", `${postX}`);
+        np.setAttributeNS(null, "y", `${postY - 40}`);
+
+        let upperRightY = 42 + 0.5 * np.getBBox().height;
+        backing.animate(
+            [
+                {
+                    x: (prevX - 2).toString(),
+                    y: (prevY - upperRightY).toString(),
+                },
+                {
+                    x: (postX - 2).toString(),
+                    y: (postY - upperRightY).toString(),
+                },
+            ],
+            {
+                duration: CURSOR_REFRESH,
+                easing: "cubic-bezier(0, 0, 0.2, 1)",
+            }
+        );
+        backing.setAttributeNS(null, "x", `${postX - 2}`);
+        backing.setAttributeNS(
+            null,
+            "y",
+            `${postY - upperRightY}`
+        );
+    }
+
+    private buildCursorNode(
+        color: string,
+        name: string
+    ): [SVGCircleElement, SVGRectElement, SVGTextElement] {
+        let showing = true;
+        let bubble = document.createElementNS(
             DrawingEngine.svgns,
             "circle"
-        );
-        retel.setAttributeNS(null, "cx", "0");
-        retel.setAttributeNS(null, "cy", "0");
-        retel.setAttributeNS(null, "r", "50");
-        retel.setAttributeNS(
+        ) as SVGCircleElement;
+        bubble.setAttributeNS(null, "cx", "0");
+        bubble.setAttributeNS(null, "cy", "0");
+        bubble.setAttributeNS(null, "r", "16");
+        bubble.setAttributeNS(
             null,
             "style",
             `fill: ${color}; stroke: ${color}; stroke-width: 1px;`
         );
 
-        this.userCursors.appendChild(retel);
-        return retel;
+        this.userCursors.appendChild(bubble);
+
+        let np: SVGTextElement = document.createElementNS(
+            DrawingEngine.svgns,
+            "text"
+        ) as SVGTextElement;
+        np.setAttributeNS(null, "x", "0");
+        np.setAttributeNS(null, "y", "-40");
+        np.setAttributeNS(
+            null,
+            "style",
+            `font: 12px sans-serif; color:black;`
+        );
+        np.innerHTML = name;
+        this.userCursors.appendChild(np);
+
+        let textBoxSize = np.getBBox();
+        np.setAttributeNS(
+            null,
+            "transform",
+            `translate(${-0.5 * textBoxSize.width}, ${
+                -0.5 * textBoxSize.height
+            })`
+        );
+
+        let backingbox = document.createElementNS(
+            DrawingEngine.svgns,
+            "rect"
+        ) as SVGRectElement;
+        backingbox.setAttributeNS(
+            null,
+            "width",
+            `${textBoxSize.width + 4}`
+        );
+        backingbox.setAttributeNS(
+            null,
+            "height",
+            `${textBoxSize.height + 4}`
+        );
+        backingbox.setAttributeNS(null, "x", "-2");
+        backingbox.setAttributeNS(null, "y", "-42");
+        backingbox.setAttributeNS(
+            null,
+            "style",
+            `fill: ${color}; stroke: ${color}; stroke-width: 1px;`
+        );
+        backingbox.setAttributeNS(
+            null,
+            "transform",
+            `translate(${-0.5 * textBoxSize.width - 2}, ${
+                -0.5 * textBoxSize.height - 2
+            })`
+        );
+
+        this.userCursors.appendChild(backingbox);
+
+        bubble.addEventListener("pointerdown", () => {
+            showing = !showing;
+            if (showing) {
+                backingbox.setAttribute("opacity", "0.4");
+                np.setAttribute("opacity", "0.7");
+            } else {
+                backingbox.setAttribute("opacity", "0");
+                np.setAttribute("opacity", "0");
+            }
+        });
+        return [bubble, backingbox, np];
     }
 
     /**
@@ -436,6 +553,7 @@ export default class DrawingEngine {
     }
 
     private addSVG(id: number, svg: Element) {
+        svg.setAttribute("id", `${id}-svg-item`);
         this.svg.appendChild(svg);
         this.svgElements.set(id, svg); //TODO: add warnings
     }
@@ -447,7 +565,12 @@ export default class DrawingEngine {
             o.tag
         );
         for (const [key, val] of Object.entries(o)) {
-            if (key === "id" || key === "tag") continue;
+            if (
+                key === "id" ||
+                key === "tag" ||
+                key == "menu"
+            )
+                continue;
             k.setAttribute(key, val);
         }
         // console.log(k);
@@ -659,6 +782,7 @@ export default class DrawingEngine {
         this.userCursors.viewBox.baseVal.height =
             window.innerHeight;
 
+        // TODO: replace canvas resizing; use offscreencanvas so that drawings arent erased
         this.displayCanvas.width = window.innerWidth;
         this.displayCanvas.height = window.innerHeight;
         this.drawCanvas.width = window.innerWidth;

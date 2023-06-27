@@ -11,6 +11,7 @@
     import Settings from "./Settings.svelte";
     import Toolbar from "./Toolbar.svelte";
     import MultiplayerManager from "./multiplayer";
+    import SelectedMenu from "./SelectedMenu.svelte";
     // import DrawingEngine from "./dengine";
 
     let wsurl = `ws://${encodeURIComponent(
@@ -40,6 +41,11 @@
      */
     let de: DrawingEngine;
     let boardFrame: Element;
+    let selectData = {
+        x: 0,
+        y: 0,
+        id: -1,
+    };
     onMount(() => {
         let icanvasctx = icanvasel.getContext("2d");
         let dcanvasctx = dcanvasel.getContext("2d");
@@ -81,7 +87,7 @@
         // with a state variable
         window.boardSocket = wsutil.opensocket(
             wsurl,
-            wsutil.defaultMessageHandler(de, mm),
+            wsutil.defaultMessageHandler(ph, de, mm),
             () => {
                 window.boardSocket({
                     msgType: wsutil.WSMessageCode.FETCH,
@@ -124,9 +130,7 @@
             case UserActions.PAN:
                 de.endDraw();
                 te = ev as TouchEvent;
-
                 t = te.changedTouches.item(0);
-
                 if (
                     te.changedTouches.length === 1 &&
                     t !== null
@@ -154,11 +158,27 @@
             case UserActions.SELECT:
                 de.endDraw();
                 console.log("select");
-
+                let newData = {
+                    x: 0,
+                    y: 0,
+                    id: -1,
+                };
+                let etarg = ev.target;
+                if (etarg instanceof Element) {
+                    let el = etarg as Element;
+                    newData.id = parseInt(el.id);
+                    [newData.x, newData.y] =
+                        ih.currentPoint();
+                    selectData = newData;
+                    console.log("setting select data");
+                    console.log(selectData);
+                }
                 break;
             default:
                 break;
         }
+
+        // icanvasel.dispatchEvent(ev);
     }
 
     function handlekeydown(ev: KeyboardEvent) {
@@ -191,6 +211,12 @@
     <canvas
         class="bcanvas"
         id="icanvas"
+        bind:this={icanvasel}
+    />
+    <svg
+        class="bcanvas"
+        viewBox="0 0 600 800"
+        bind:this={udisplay}
         on:pointerdown={handleEvent}
         on:pointermove={handleEvent}
         on:pointerup={handleEvent}
@@ -199,17 +225,13 @@
         on:touchmove={handleEvent}
         on:touchstart={handleEvent}
         on:touchend={handleEvent}
-        bind:this={icanvasel}
-        tabindex="0"
-    />
-    <svg
-        class="bcanvas no-interact-canvas"
-        viewBox="0 0 600 800"
-        bind:this={udisplay}
     />
 </div>
 <Settings {mm} />
 <Toolbar pluginManager={ph} />
+{#if !Number.isNaN(selectData.id)}
+    <SelectedMenu {...selectData} pm={ph} />
+{/if}
 
 <!--  -->
 
@@ -222,11 +244,12 @@
         width: 50%; */
         /* background-color: green; */
         position: absolute;
+        pointer-events: auto;
         /* top: 0px; */
         /* left: 0px; */
     }
 
-    .no-interact-canvas {
+    /* .no-interact-canvas {
         pointer-events: none;
-    }
+    } */
 </style>

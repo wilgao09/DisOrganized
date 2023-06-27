@@ -1,5 +1,6 @@
 import type DrawingEngine from "./dengine";
 import type MultiplayerManager from "./multiplayer";
+import type PluginManager from "./plugins";
 
 // CHECK WSHANDLERS.GO
 export enum WSMessageCode {
@@ -72,6 +73,7 @@ export function opensocket(
 }
 
 export function defaultMessageHandler(
+    pm: PluginManager,
     de: DrawingEngine,
     mm: MultiplayerManager
 ) {
@@ -86,9 +88,7 @@ export function defaultMessageHandler(
                 // TODO: needs to be trycaught
                 let arrOfObj = JSON.parse(m.msg);
                 for (let someObj of arrOfObj) {
-                    // console.log(someObj);
-                    // TODO: postprocessing by plugins
-                    de.drawSVGJSON(someObj);
+                    de.drawSVGJSON(pm.JSONToSVG(someObj));
                 }
                 break;
             case WSMessageCode.CREATE:

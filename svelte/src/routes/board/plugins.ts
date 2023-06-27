@@ -120,6 +120,28 @@ export default class PluginManager {
         });
     }
 
-    // TODO: some function to pass JSON fetched from the websocket
-    // through all the plugins in case they need postprocessing
+    /**
+     * Given arbitrary JSON, do some postprocessing
+     * It is expected that o originates from teh same set of plugins that are currently loaded
+     * @param o some json object
+     */
+    public JSONToSVG(o: any) {
+        if (o === undefined) return; //wtf?
+        o.menu = [];
+        for (let i = 0; i < this.fnorder.length; i++) {
+            if (
+                this.fnorder[i] !== undefined &&
+                this.fnorder[i].JSONtoSVG !== undefined
+            ) {
+                this.fnorder[i].JSONtoSVG(o);
+            }
+        }
+        o.menu.push([
+            "Delete",
+            () => {
+                // TODO: delete
+            },
+        ]);
+        return o;
+    }
 }
