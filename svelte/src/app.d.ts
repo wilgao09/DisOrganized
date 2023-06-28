@@ -35,6 +35,7 @@ declare global {
     interface SVGJSON {
         tag: string;
         id: number;
+        menu: [string, () => void][];
     }
 }
 

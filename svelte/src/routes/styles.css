@@ -14,7 +14,12 @@
     --focus-1: #ffcc00;
     --background-err: #fa9494;
     --text-err: #851616;
-    --success-1: #00cc00;
+    --background-succ: #58ce58;
+    --text-succ: #00cc00;
+    --background-info: #9fb5fc;
+    --text-info: #052daf;
+    --background-warn: #e8d66f;
+    --text-warn: #c7ad1d;
 }
 
 #app {

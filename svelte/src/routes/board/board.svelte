@@ -44,7 +44,7 @@
     let selectData = {
         x: 0,
         y: 0,
-        id: -1,
+        id: NaN,
     };
     onMount(() => {
         let icanvasctx = icanvasel.getContext("2d");
@@ -88,6 +88,11 @@
             wsurl,
             wsutil.defaultMessageHandler(ph, de, mm),
             () => {
+                window.boardSocket({
+                    msgType:
+                        wsutil.WSMessageCode.GET_MY_DATA,
+                    msg: "",
+                });
                 window.boardSocket({
                     msgType: wsutil.WSMessageCode.FETCH,
                     msg: "",
@@ -208,6 +213,7 @@
         on:touchmove={handleEvent}
         on:touchstart={handleEvent}
         on:touchend={handleEvent}
+        tabindex="-1"
     />
 
     <canvas
@@ -229,8 +235,8 @@
 </div>
 <Settings {mm} />
 <Toolbar pluginManager={ph} />
-{#if !Number.isNaN(selectData.id)}
-    <SelectedMenu {...selectData} pm={ph} />
+{#if !Number.isNaN(selectData.id) && de !== undefined}
+    <SelectedMenu {...selectData} {de} />
 {/if}
 
 <!--  -->

@@ -51,9 +51,10 @@
         flex-direction: row;
         position: absolute;
         bottom: 0px;
-        right: 0px;
+        left: 50%;
         height: 8%;
-        width: 50rem; /** TODO: measurements of this*/
+        /* width: 50rem;  */
         background-color: teal;
+        transform: translate(-50%, 0%);
     }
 </style>

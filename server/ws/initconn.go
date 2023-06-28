@@ -90,11 +90,13 @@ func EstablishConnection(w http.ResponseWriter, r *http.Request, name string) {
 	// alert all other users that a new user has joined
 	userdata, _ := GetConnectionsStruct().GetUserData()
 	for _, b := range userdata {
-		WriteMessageToUserDataStruct(
-			// 4 is ADD_USER
-			// TODO: if something breaks, check this
-			b, 4, fmt.Sprintf("%d\v%s", uid, name),
-		)
+		if b.id != uid {
+			WriteMessageToUserDataStruct(
+				// 4 is ADD_USER
+				// TODO: if something breaks, check this
+				b, 5, fmt.Sprintf("%d\v%s", uid, name),
+			)
+		}
 	}
 
 	listenws(conn, uid)

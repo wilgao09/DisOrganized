@@ -139,7 +139,10 @@ export default class PluginManager {
         o.menu.push([
             "Delete",
             () => {
-                // TODO: delete
+                window.boardSocket({
+                    msg: `${o.id}`,
+                    msgType: wsutil.WSMessageCode.DELETE,
+                });
             },
         ]);
         return o;

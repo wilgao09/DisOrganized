@@ -7,8 +7,8 @@ export enum WSMessageCode {
     MESSAGE,
     FETCH,
     CREATE,
-    // MOVE = 3,
     DELTA,
+    DELETE,
     ADD_USER,
     DELETE_USER,
     DELTA_USER,
@@ -22,10 +22,6 @@ interface SocketMessage {
     msgType: WSMessageCode;
     msg: string;
 }
-
-let cookie = "";
-let id = -1;
-let name = "";
 
 // takes a connection url and a handler for all future connections
 // returns a callback that sends messages over the connection
@@ -77,7 +73,18 @@ export function defaultMessageHandler(
     de: DrawingEngine,
     mm: MultiplayerManager
 ) {
+    // require that the first message be a GET_MY_DATA message
+    let gotData = false;
+    // this callback is for handling incoming messages
     return (m: SocketMessage) => {
+        if (
+            !gotData &&
+            m.msgType !== WSMessageCode.GET_MY_DATA
+        ) {
+            // if you havent gotten your data yet, and this message isnt about
+            // your data, ignore it
+            return;
+        }
         let data;
         switch (m.msgType) {
             case WSMessageCode.MESSAGE:
@@ -93,6 +100,9 @@ export function defaultMessageHandler(
                 break;
             case WSMessageCode.CREATE:
                 de.drawSVGJSON(JSON.parse(m.msg));
+                break;
+            case WSMessageCode.DELETE:
+                de.removeById(parseInt(m.msg));
                 break;
             case WSMessageCode.ADD_USER:
                 data = m.msg.split("\v");
@@ -126,20 +136,13 @@ export function defaultMessageHandler(
                 break;
             case WSMessageCode.GET_MY_DATA:
                 data = m.msg.split("\v");
-                cookie = data[0];
-                id = parseInt(data[1]);
-                name = data[2];
+                mm.addSelf(
+                    parseInt(data[1]),
+                    data[0],
+                    data[2]
+                );
+                gotData = true;
                 break;
         }
     };
-}
-
-export function getCookie(): string {
-    return cookie;
-}
-export function getId(): number {
-    return id;
-}
-export function getName(): string {
-    return name;
 }

@@ -2,6 +2,7 @@ import type MultiplayerManager from "./multiplayer";
 import { WSMessageCode } from "./wsutil";
 
 const CURSOR_REFRESH = 66;
+const OPACITY = 0.5;
 
 /**
  * Responsible for managing the interactive canvas and the underlying svg
@@ -20,6 +21,7 @@ export default class DrawingEngine {
     private svg: SVGSVGElement;
     private isDrawing: boolean;
     private svgElements: Map<number, Element>;
+    private svgMenus: Map<number, [string, () => void][]>;
 
     // private userCursors: SVGSVGElement;
     private userCursorElements: Map<
@@ -36,6 +38,8 @@ export default class DrawingEngine {
     private mm: MultiplayerManager;
 
     private readySendPos: boolean = true;
+
+    private div1: Element;
 
     // private centerel: Element;
     constructor(
@@ -77,6 +81,13 @@ export default class DrawingEngine {
         this.isDrawing = false;
         this.svgElements = new Map();
         this.mm = mm;
+        this.svgMenus = new Map();
+
+        this.div1 = document.createElementNS(
+            DrawingEngine.svgns,
+            "g"
+        );
+        this.svg.appendChild(this.div1);
 
         this.xcenter = window.innerWidth / 2;
         this.ycenter = window.innerHeight / 2;
@@ -119,6 +130,10 @@ export default class DrawingEngine {
 
     private checkCursorBubbleRefresh() {
         for (let [k, v] of this.mm.getAllUserData()) {
+            // do nothing if the current user is us
+            if (k === this.mm.getUserData().id) {
+                continue;
+            }
             if (
                 this.userCursorElements.get(k) === undefined
             ) {
@@ -228,7 +243,7 @@ export default class DrawingEngine {
         color: string,
         name: string
     ): [SVGCircleElement, SVGRectElement, SVGTextElement] {
-        let showing = true;
+        let showing = false;
         let bubble = document.createElementNS(
             DrawingEngine.svgns,
             "circle"
@@ -253,7 +268,7 @@ export default class DrawingEngine {
         np.setAttributeNS(
             null,
             "style",
-            `font: 12px sans-serif; color:black;`
+            `font: 12px sans-serif; color:black; mix-blend-mode: exclusion;`
         );
         np.innerHTML = name;
         this.svg.appendChild(np);
@@ -301,11 +316,14 @@ export default class DrawingEngine {
         bubble.addEventListener("pointerdown", () => {
             showing = !showing;
             if (showing) {
-                backingbox.setAttribute("opacity", "0.4");
-                np.setAttribute("opacity", "0.7");
+                backingbox.setAttribute(
+                    "opacity",
+                    `${OPACITY}`
+                );
+                // np.setAttribute("opacity", "0.7");
             } else {
                 backingbox.setAttribute("opacity", "0");
-                np.setAttribute("opacity", "0");
+                // np.setAttribute("opacity", "0");
             }
         });
         return [bubble, backingbox, np];
@@ -551,9 +569,25 @@ export default class DrawingEngine {
         // this.drawCtx.clearRect(x0, y0, w, h);
     }
 
+    /**
+     * Given an id, delete it from the board and free all relevant resources.
+     * This is expecte dto be called in response to receiving a delete message
+     * @param id the id to delete
+     */
+    public removeById(id: number) {
+        if (this.svgElements.get(id) === undefined) {
+            return;
+        }
+        let el = this.svgElements.get(id) as Element;
+        el.remove();
+        this.svgElements.delete(id);
+        this.svgMenus.delete(id);
+    }
+
     private addSVG(id: number, svg: Element) {
         svg.setAttribute("id", `${id}-svg-item`);
-        this.svg.appendChild(svg);
+
+        this.svg.insertBefore(svg, this.div1);
         this.svgElements.set(id, svg); //TODO: add warnings
     }
 
@@ -573,6 +607,7 @@ export default class DrawingEngine {
             k.setAttribute(key, val);
         }
         // console.log(k);
+        this.svgMenus.set(o.id, o.menu);
         this.addSVG(o.id, k);
     }
 
@@ -795,5 +830,16 @@ export default class DrawingEngine {
         //     "cy",
         //     `${this.ycenter}`
         // );
+    }
+
+    public getMenuOptions(
+        id: number
+    ): Readonly<[string, () => void][]> {
+        let retrieved = this.svgMenus.get(id);
+        if (Number.isNaN(id) || retrieved === undefined) {
+            return [];
+        } else {
+            return retrieved;
+        }
     }
 }

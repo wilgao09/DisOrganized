@@ -22,6 +22,12 @@ export default class MultiplayerManager {
     public userMappingUpdate: Writable<number>;
     public userListUpdate: Writable<number>;
 
+    private personalData: {
+        name: string;
+        id: number;
+        cookie: string;
+    };
+
     constructor() {
         this.userMappings = new Map<number, UserData>();
         this.userMappingUpdate = writable(0);
@@ -32,6 +38,12 @@ export default class MultiplayerManager {
             "#00ff00",
             "#0000ff",
         ];
+
+        this.personalData = {
+            name: "UNNAMED",
+            id: -1,
+            cookie: "",
+        };
     }
 
     private listUpdate() {
@@ -44,6 +56,24 @@ export default class MultiplayerManager {
 
     public clearAll() {
         this.userMappings = new Map<number, UserData>();
+        this.listUpdate();
+    }
+
+    public addSelf(
+        id: number,
+        cookie: string,
+        name: string
+    ) {
+        this.personalData = {
+            id: id,
+            cookie: cookie,
+            name: name,
+        };
+        this.userMappings.set(id, {
+            name: name,
+            x: 0,
+            y: 0,
+        });
         this.listUpdate();
     }
 
@@ -112,5 +142,13 @@ export default class MultiplayerManager {
                 });
             }
         }
+    }
+
+    public getUserData(): Readonly<{
+        name: string;
+        id: number;
+        cookie: string;
+    }> {
+        return this.personalData;
     }
 }

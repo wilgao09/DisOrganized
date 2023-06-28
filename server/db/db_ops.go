@@ -63,8 +63,10 @@ func (dodb *DoDb) ApplyDiff(diff DbDiff) error {
 	var err error
 	var stmt *sql.Stmt
 	switch diff.Dtype {
+	//TODO: merge addobj with this
 	case DT_ADD:
 		stmt, err = dodb.dbref.Prepare("INSERT INTO board(jsonobj) VALUES (?);")
+		defer stmt.Close()
 		if err != nil {
 			return err
 		}
@@ -75,6 +77,7 @@ func (dodb *DoDb) ApplyDiff(diff DbDiff) error {
 		return nil
 	case DT_REMOVE:
 		stmt, err = dodb.dbref.Prepare("DELETE FROM board WHERE id = ? ;")
+		defer stmt.Close()
 		if err != nil {
 			return err
 		}
@@ -85,6 +88,7 @@ func (dodb *DoDb) ApplyDiff(diff DbDiff) error {
 		return nil
 	case DT_UPDATE:
 		stmt, err = dodb.dbref.Prepare("UPDATE board SET jsonobj = ? WHERE id = ?;")
+		defer stmt.Close()
 		if err != nil {
 			return err
 		}

@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"strconv"
 	"strings"
 	"williamgao09/disorganized/db"
 
@@ -17,8 +19,8 @@ const ( // TODO: dont make these globals like this
 	MESSAGE = iota
 	FETCH
 	CREATE
-	// MOVE
 	DELTA
+	DELETE
 	ADD_USER
 	DELETE_USER
 	DELTA_USER
@@ -57,6 +59,30 @@ func setUpWSHandlers() {
 			}
 		} else {
 			wsutil.WriteMessageToUserConn(c, 127, "Failed to add")
+		}
+
+	})
+
+	//TODO: DELTA
+
+	connstruct.AddHandler(DELETE, func(c *websocket.Conn, i int, s string) {
+		id, err := strconv.Atoi(s)
+		if err != nil {
+			log.Printf("Failed to idenitfy an id based on %s\n", s)
+			wsutil.WriteMessageToUserConn(c, 127, "Failed to delete")
+			return
+		}
+		if err = db.GetCurrentOpenBoard().ApplyDiff((db.DbDiff{
+			Dtype:   db.DT_REMOVE,
+			Id:      id,
+			Content: "",
+		})); err == nil {
+			userdata, _ := connstruct.GetUserData()
+			for _, udata := range userdata {
+				wsutil.WriteMessageToUserDataStruct(udata, DELETE, s)
+			}
+		} else {
+			wsutil.WriteMessageToUserConn(c, 127, "Failed to delete")
 		}
 
 	})
