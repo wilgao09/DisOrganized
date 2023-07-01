@@ -364,7 +364,7 @@ export default class DrawingEngine {
             this.extendXNeg(c, negspace[0], x);
             negspace[0] = x;
         }
-        console.log(negspace);
+        // console.log(negspace);
         return negspace;
     }
 

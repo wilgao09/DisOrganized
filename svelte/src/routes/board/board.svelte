@@ -114,6 +114,8 @@
         });
     });
 
+    let lastUAction = UserActions.NONE;
+
     //  listen to new drawings
     /**
      * @param {PointerEvent | TouchEvent} ev
@@ -127,8 +129,22 @@
 
         let boardLocation = de.eventToBoardCoords(ev);
 
-        // TODO: convert the event into boardcoords and send
-        // over the ws
+        let metadata = ih.actionMeta(ev);
+        // console.log("metadata");
+        // console.log(metadata);
+        if (
+            lastUAction === UserActions.DRAW &&
+            metadata.lift === -1
+        ) {
+            // pause drawing
+            let objs = ph.pauseAll({
+                x: boardLocation[0][0],
+                y: boardLocation[0][1],
+            });
+            for (let k of objs) {
+                ph.commitObject(k);
+            }
+        }
         // TODO: zoom
         switch (ih.actionType(ev)) {
             case UserActions.PAN:
@@ -146,7 +162,7 @@
                         t.clientY
                     );
                 }
-
+                lastUAction = UserActions.PAN;
                 break;
             case UserActions.DRAW:
                 pe = ev as PointerEvent;
@@ -158,6 +174,7 @@
                     y: boardLocation[0][1],
                     x: boardLocation[0][0],
                 });
+                lastUAction = UserActions.DRAW;
                 break;
             case UserActions.SELECT:
                 de.endDraw();
@@ -177,6 +194,7 @@
                     console.log("setting select data");
                     console.log(selectData);
                 }
+                lastUAction = UserActions.SELECT;
                 break;
             default:
                 break;
@@ -187,6 +205,7 @@
 
     function handlekeydown(ev: KeyboardEvent) {
         console.log("down");
+        // TODO: here
         for (let f of ih.getFns(ev.key)) ph.activateFn(f);
     }
 
@@ -202,6 +221,7 @@
     <!-- width="100%"
     height="100%" -->
     <svg
+        id="main-svg"
         class="bcanvas"
         viewBox="0 0 600 800"
         bind:this={svgel}
@@ -257,5 +277,9 @@
 
     .no-interact-canvas {
         pointer-events: none;
+    }
+
+    #main-svg {
+        pointer-events: stroke;
     }
 </style>

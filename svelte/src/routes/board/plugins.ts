@@ -112,12 +112,17 @@ export default class PluginManager {
         return this.fnnamemap;
     }
 
-    public deactivateAndCommit(fname: string) {
-        let m = this.deactivateFn(fname);
+    public commitObject(o: any) {
         window.boardSocket({
-            msg: JSON.stringify(m),
+            msg: JSON.stringify(o),
             msgType: wsutil.WSMessageCode.CREATE,
         });
+    }
+
+    public deactivateAndCommit(fname: string) {
+        let m = this.deactivateFn(fname);
+        if (m !== undefined && m !== null)
+            this.commitObject(m);
     }
 
     /**
@@ -146,5 +151,29 @@ export default class PluginManager {
             },
         ]);
         return o;
+    }
+
+    // public pauseFn(name: string) {}
+
+    public pauseAll({
+        x,
+        y,
+    }: {
+        x: number;
+        y: number;
+    }): any[] {
+        let ans: any[] = [];
+        for (let i = 0; i < this.fnorder.length; i++) {
+            let n = this.fnorder[i];
+            if (
+                n !== undefined &&
+                n.onPause !== undefined
+            ) {
+                let i = this.offer(n.onPause(x, y));
+                if (i !== undefined) ans.push(i);
+            }
+        }
+
+        return ans;
     }
 }

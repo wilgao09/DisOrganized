@@ -30,6 +30,7 @@ declare global {
         onActivate: () => any;
         onDeactivate: () => any;
         JSONtoSVG: (a: Object) => void;
+        onPause?: (x: number, y: number) => any;
     }
 
     interface SVGJSON {

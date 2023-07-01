@@ -30,7 +30,7 @@ export default class InputManager {
 
         this.usermap.set(
             UserInputs.TOUCH_DRAG,
-            UserActions.PAN
+            UserActions.DRAW
         );
         this.usermap.set(
             UserInputs.MOUSE_DRAG,
@@ -74,6 +74,7 @@ export default class InputManager {
     public actionType(
         e: PointerEvent | TouchEvent
     ): UserActions {
+        console.log(e);
         if (
             e.type === "touchstart" ||
             e.type == "touchend" ||
@@ -168,6 +169,29 @@ export default class InputManager {
         }
 
         return UserActions.NONE;
+    }
+
+    public actionMeta(e: PointerEvent | TouchEvent): {
+        lift: number;
+    } {
+        let ret = {
+            lift: 0,
+        };
+        if (
+            e.type.includes("up") ||
+            e.type.includes("cancel")
+        ) {
+            ret.lift = -1;
+        }
+
+        if (
+            e.type.includes("start") ||
+            e.type.includes("down")
+        ) {
+            ret.lift = 1;
+        }
+
+        return ret;
     }
 
     public previousPoint(): Readonly<[number, number]> {
