@@ -731,15 +731,11 @@ export default class DrawingEngine {
      * @param ev an event that gives information about the user position
      * @returns a boolean denoting whether or not the position was succesfully sent
      */
-    public trySendPosition(
-        e: PointerEvent | TouchEvent
-    ): boolean {
+    public trySendPosition(x: number, y: number): boolean {
         if (!this.readySendPos) return false;
-        let bc = this.eventToBoardCoords(e);
-        if (bc.length === 0) return false;
         window.boardSocket({
             msgType: WSMessageCode.POINTER_MOVED,
-            msg: `${bc[0][0]}\v${bc[0][1]}`,
+            msg: `${x}\v${y}`,
         });
         this.readySendPos = false;
         return true;
@@ -755,7 +751,10 @@ export default class DrawingEngine {
     public mapScreenPointToBoardPoint(
         x: number,
         y: number
-    ): [number, number] {
+    ): {
+        x: number;
+        y: number;
+    } {
         // get the vector from center of screen to dest
         let dx = x - window.innerWidth / 2;
         let dy = y - window.innerHeight / 2;
@@ -763,39 +762,22 @@ export default class DrawingEngine {
         dx /= this.zoomFactor;
         dy /= this.zoomFactor;
 
-        return [this.xcenter + dx, this.ycenter + dy];
+        return {
+            x: this.xcenter + dx,
+            y: this.ycenter + dy,
+        };
     }
 
-    public eventToBoardCoords(
-        e: TouchEvent | PointerEvent
-    ): [number, number][] {
-        if (
-            e.type === "touchstart" ||
-            e.type == "touchend" ||
-            e.type === " touchcancel" ||
-            e.type === "touchmove"
-        ) {
-            let ev = e as TouchEvent;
-            let ans = [];
-            for (let tp of ev.changedTouches) {
-                ans.push(
-                    this.mapScreenPointToBoardPoint(
-                        tp.clientX,
-                        tp.clientY
-                    )
-                );
-            }
-            return ans;
-        } else {
-            let ev = e as PointerEvent;
-            return [
-                this.mapScreenPointToBoardPoint(
-                    ev.clientX,
-                    ev.clientY
-                ),
-            ];
-        }
-    }
+    // public eventToBoardCoords(
+    //     ev: PointerEvent
+    // ): [number, number][] {
+    //     return [
+    //         this.mapScreenPointToBoardPoint(
+    //             ev.clientX,
+    //             ev.clientY
+    //         ),
+    //     ];
+    // }
 
     public resize() {
         this.xcenter +=

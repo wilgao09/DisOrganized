@@ -16,9 +16,14 @@ export default class InputManager {
     // private inputReady : boolean;
     private lastInput: PointerState;
 
-    private prevLocation: [number, number];
-    private currLocation: [number, number];
-
+    private prevLocation: {
+        x: number;
+        y: number;
+    };
+    private currLocation: {
+        x: number;
+        y: number;
+    };
     constructor() {
         this.fn2key = new Map();
         this.key2fns = new Map();
@@ -30,6 +35,10 @@ export default class InputManager {
 
         this.usermap.set(
             UserInputs.TOUCH_DRAG,
+            UserActions.PAN
+        );
+        this.usermap.set(
+            UserInputs.PEN_DRAG,
             UserActions.DRAW
         );
         this.usermap.set(
@@ -37,13 +46,13 @@ export default class InputManager {
             UserActions.DRAW
         );
 
-        this.prevLocation = [0, 0];
-        this.currLocation = [0, 0];
+        this.prevLocation = { x: 0, y: 0 };
+        this.currLocation = { x: 0, y: 0 };
     }
 
     private pushNewPoint(x: number, y: number) {
         this.prevLocation = this.currLocation;
-        this.currLocation = [x, y];
+        this.currLocation = { x: x, y: y };
     }
 
     //TODO: warnings
@@ -71,50 +80,7 @@ export default class InputManager {
 
     // given a pointer event, determines what the user was trying to do
     // this is based in a running history of pointer movements
-    public actionType(
-        e: PointerEvent | TouchEvent
-    ): UserActions {
-        console.log(e);
-        if (
-            e.type === "touchstart" ||
-            e.type == "touchend" ||
-            e.type === " touchcancel" ||
-            e.type === "touchmove"
-        ) {
-            let ev = e as TouchEvent;
-            if (ev.touches.length !== 1) {
-                return UserActions.NONE;
-            }
-            this.pushNewPoint(
-                ev.changedTouches[0].clientX,
-                ev.changedTouches[0].clientY
-            );
-            if (
-                ev.type === "touchmove" &&
-                this.lastInput === PointerState.TOUCH
-            ) {
-                return (
-                    this.usermap.get(
-                        UserInputs.TOUCH_DRAG
-                    ) ?? UserActions.NONE
-                );
-            }
-            if (ev.type === "touchstart") {
-                this.lastInput = PointerState.TOUCH;
-
-                return (
-                    this.usermap.get(
-                        UserInputs.TOUCH_TAP
-                    ) ?? UserActions.NONE
-                );
-            }
-            if (ev.type === "touchend") {
-                this.lastInput = PointerState.NONE;
-                return UserActions.SELECT;
-            }
-        }
-
-        let ev = e as PointerEvent;
+    public actionType(ev: PointerEvent): UserActions {
         //obfusccated
         let t = {
             mouse: {
@@ -124,13 +90,13 @@ export default class InputManager {
                     UserInputs.MOUSE_TAP,
                 ],
             },
-            // touch: {
-            //     s: PointerState.TOUCH,
-            //     e: [
-            //         UserInputs.TOUCH_DRAG,
-            //         UserInputs.TOUCH_TAP,
-            //     ],
-            // },
+            touch: {
+                s: PointerState.TOUCH,
+                e: [
+                    UserInputs.TOUCH_DRAG,
+                    UserInputs.TOUCH_TAP,
+                ],
+            },
             pen: {
                 s: PointerState.PEN,
                 e: [
@@ -171,7 +137,7 @@ export default class InputManager {
         return UserActions.NONE;
     }
 
-    public actionMeta(e: PointerEvent | TouchEvent): {
+    public actionMeta(e: PointerEvent): {
         lift: number;
     } {
         let ret = {
@@ -194,11 +160,17 @@ export default class InputManager {
         return ret;
     }
 
-    public previousPoint(): Readonly<[number, number]> {
+    public previousPoint(): Readonly<{
+        x: number;
+        y: number;
+    }> {
         return this.prevLocation;
     }
 
-    public currentPoint(): Readonly<[number, number]> {
+    public currentPoint(): Readonly<{
+        x: number;
+        y: number;
+    }> {
         return this.currLocation;
     }
 }

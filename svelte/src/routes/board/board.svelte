@@ -117,18 +117,15 @@
     let lastUAction = UserActions.NONE;
 
     //  listen to new drawings
-    /**
-     * @param {PointerEvent | TouchEvent} ev
-     */
-    function handleEvent(ev: PointerEvent | TouchEvent) {
-        let te: TouchEvent;
-        let pe: PointerEvent;
-        let t: Touch | null;
-
-        de.trySendPosition(ev);
-
-        let boardLocation = de.eventToBoardCoords(ev);
-
+    function handleEvent(ev: PointerEvent) {
+        let boardLocation = de.mapScreenPointToBoardPoint(
+            ev.clientX,
+            ev.clientY
+        );
+        de.trySendPosition(
+            boardLocation.x,
+            boardLocation.y
+        );
         let metadata = ih.actionMeta(ev);
         // console.log("metadata");
         // console.log(metadata);
@@ -138,8 +135,7 @@
         ) {
             // pause drawing
             let objs = ph.pauseAll({
-                x: boardLocation[0][0],
-                y: boardLocation[0][1],
+                ...boardLocation,
             });
             for (let k of objs) {
                 ph.commitObject(k);
@@ -149,30 +145,20 @@
         switch (ih.actionType(ev)) {
             case UserActions.PAN:
                 de.endDraw();
-                te = ev as TouchEvent;
-                t = te.changedTouches.item(0);
-                if (
-                    te.changedTouches.length === 1 &&
-                    t !== null
-                ) {
-                    de.pan(
-                        ih.previousPoint()[0],
-                        ih.previousPoint()[1],
-                        t.clientX,
-                        t.clientY
-                    );
-                }
+                de.pan(
+                    ih.previousPoint().x,
+                    ih.previousPoint().y,
+                    ev.clientX,
+                    ev.clientY
+                );
+
                 lastUAction = UserActions.PAN;
                 break;
             case UserActions.DRAW:
-                pe = ev as PointerEvent;
-                de.draw(
-                    boardLocation[0][0],
-                    boardLocation[0][1]
-                );
+                de.draw(boardLocation.x, boardLocation.y);
                 ph.offer({
-                    y: boardLocation[0][1],
-                    x: boardLocation[0][0],
+                    x: boardLocation.x,
+                    y: boardLocation.y,
                 });
                 lastUAction = UserActions.DRAW;
                 break;
@@ -188,18 +174,15 @@
                 if (etarg instanceof Element) {
                     let el = etarg as Element;
                     newData.id = parseInt(el.id);
-                    [newData.x, newData.y] =
-                        ih.currentPoint();
+                    newData.x = ih.currentPoint().x;
+                    newData.y = ih.currentPoint().y;
                     selectData = newData;
-                    console.log("setting select data");
-                    console.log(selectData);
                 }
                 lastUAction = UserActions.SELECT;
                 break;
             default:
                 break;
         }
-
         // icanvasel.dispatchEvent(ev);
     }
 
@@ -230,9 +213,6 @@
         on:pointerup={handleEvent}
         on:keydown={handlekeydown}
         on:keyup={handlekeyup}
-        on:touchmove={handleEvent}
-        on:touchstart={handleEvent}
-        on:touchend={handleEvent}
         tabindex="-1"
     />
 
@@ -264,6 +244,7 @@
 <style>
     .ccontain {
         display: block;
+        touch-action: none;
     }
     .bcanvas {
         /* height: 50%;
