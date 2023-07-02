@@ -584,11 +584,19 @@ export default class DrawingEngine {
         this.svgMenus.delete(id);
     }
 
-    private addSVG(id: number, svg: Element) {
+    private addSVG(
+        id: number,
+        svg: Element,
+        cb: ((s: Element) => void)[]
+    ) {
         svg.setAttribute("id", `${id}-svg-item`);
 
         this.svg.insertBefore(svg, this.div1);
         this.svgElements.set(id, svg); //TODO: add warnings
+
+        for (let c of cb) {
+            c(svg);
+        }
     }
 
     public drawSVGJSON(o: SVGJSON) {
@@ -601,14 +609,20 @@ export default class DrawingEngine {
             if (
                 key === "id" ||
                 key === "tag" ||
-                key == "menu"
+                key === "menu" ||
+                key === "onmount"
             )
                 continue;
+            if (key === "textContent") {
+                k.textContent = val;
+                continue;
+            }
             k.setAttribute(key, val);
         }
+
         // console.log(k);
         this.svgMenus.set(o.id, o.menu);
-        this.addSVG(o.id, k);
+        this.addSVG(o.id, k, o.onmount);
     }
 
     public clearAll() {

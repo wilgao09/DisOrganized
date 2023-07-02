@@ -60,7 +60,7 @@ export default class PluginManager {
             k[0] + 1
         );
     }
-    public deactivateFn(s: string): any {
+    public async deactivateFn(s: string): Promise<any> {
         let k;
         if ((k = this.fnnamemap.get(s)) === undefined) {
             console.error(
@@ -70,7 +70,7 @@ export default class PluginManager {
         }
         k[1] = false;
         this.fnnamemap.set(s, k);
-        let j = this.fnorder[k[0]].onDeactivate();
+        let j = await this.fnorder[k[0]].onDeactivate();
         // console.log(k);
         this.notifyChange();
         return this.offer(j, k[0] + 1);
@@ -113,14 +113,17 @@ export default class PluginManager {
     }
 
     public commitObject(o: any) {
+        if (Object.keys(o).length === 0) {
+            return;
+        }
         window.boardSocket({
             msg: JSON.stringify(o),
             msgType: wsutil.WSMessageCode.CREATE,
         });
     }
 
-    public deactivateAndCommit(fname: string) {
-        let m = this.deactivateFn(fname);
+    public async deactivateAndCommit(fname: string) {
+        let m = await this.deactivateFn(fname);
         if (m !== undefined && m !== null)
             this.commitObject(m);
     }
@@ -133,6 +136,7 @@ export default class PluginManager {
     public JSONToSVG(o: any) {
         if (o === undefined) return; //wtf?
         o.menu = [];
+        o.onmount = [];
         for (let i = 0; i < this.fnorder.length; i++) {
             if (
                 this.fnorder[i] !== undefined &&

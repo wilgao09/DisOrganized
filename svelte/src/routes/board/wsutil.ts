@@ -99,7 +99,10 @@ export function defaultMessageHandler(
                 }
                 break;
             case WSMessageCode.CREATE:
-                de.drawSVGJSON(JSON.parse(m.msg));
+                // de.drawSVGJSON(JSON.parse(m.msg));
+                de.drawSVGJSON(
+                    pm.JSONToSVG(JSON.parse(m.msg))
+                );
                 break;
             case WSMessageCode.DELETE:
                 de.removeById(parseInt(m.msg));

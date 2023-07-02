@@ -28,7 +28,7 @@ declare global {
         fnName: string;
         fnPrio: number;
         onActivate: () => any;
-        onDeactivate: () => any;
+        onDeactivate: () => Promise<any>;
         JSONtoSVG: (a: Object) => void;
         onPause?: (x: number, y: number) => any;
     }
@@ -37,6 +37,7 @@ declare global {
         tag: string;
         id: number;
         menu: [string, () => void][];
+        onmount: (() => void)[];
     }
 }
 
