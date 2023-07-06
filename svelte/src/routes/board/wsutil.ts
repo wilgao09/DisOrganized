@@ -16,6 +16,8 @@ export enum WSMessageCode {
     GET_USER_COLORS,
     POINTER_MOVED,
     GET_MY_DATA,
+    SET_BRUSH,
+    GET_BRUSH,
 }
 
 interface SocketMessage {
@@ -146,6 +148,9 @@ export function defaultMessageHandler(
                 );
                 gotData = true;
                 break;
+            case WSMessageCode.SET_BRUSH:
+                data = m.msg.split("\v");
+                mm.setUserBrush(parseInt(data[0]), data[1]);
         }
     };
 }

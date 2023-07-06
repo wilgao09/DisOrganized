@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"williamgao09/disorganized/db"
+	"williamgao09/disorganized/ws"
 
 	wsutil "williamgao09/disorganized/ws"
 
@@ -28,6 +29,8 @@ const ( // TODO: dont make these globals like this
 	GET_USER_COLORS
 	POINTER_MOVED
 	GET_MY_DATA
+	SET_BRUSH
+	GET_BRUSH
 
 	ERR = 127
 )
@@ -127,5 +130,26 @@ func setUpWSHandlers() {
 		data := connstruct.Get(i)
 		wsutil.WriteMessageToUserDataStruct(data,
 			GET_MY_DATA, data.String())
+	})
+
+	connstruct.AddHandler(SET_BRUSH, func(c *websocket.Conn, i int, s string) {
+		ud := connstruct.Get(i)
+		ud.SetBrush(s)
+		userdata, _ := connstruct.GetUserData()
+		for _, otherdata := range userdata {
+			wsutil.WriteMessageToUserDataStruct((otherdata), SET_BRUSH,
+				fmt.Sprintf("%d\v%s", i, s))
+		}
+	})
+
+	connstruct.AddHandler(GET_BRUSH, func(c *websocket.Conn, i int, s string) {
+		uid, err := strconv.Atoi(s)
+		if err != nil {
+			// send default brush
+			wsutil.WriteMessageToUserConn(c, GET_BRUSH, ws.DefaultBrush)
+			return
+		}
+		wsutil.WriteMessageToUserConn(c, GET_BRUSH, connstruct.Get(uid).GetBrush())
+
 	})
 }

@@ -114,8 +114,6 @@
         });
     });
 
-    let lastUAction = UserActions.NONE;
-
     //  listen to new drawings
     function handleEvent(ev: PointerEvent) {
         let boardLocation = de.mapScreenPointToBoardPoint(
@@ -130,7 +128,7 @@
         // console.log("metadata");
         // console.log(metadata);
         if (
-            lastUAction === UserActions.DRAW &&
+            ih.currAction() === UserActions.DRAW &&
             metadata.lift === -1
         ) {
             // pause drawing
@@ -151,8 +149,6 @@
                     ev.clientX,
                     ev.clientY
                 );
-
-                lastUAction = UserActions.PAN;
                 break;
             case UserActions.DRAW:
                 de.draw(boardLocation.x, boardLocation.y);
@@ -160,7 +156,6 @@
                     x: boardLocation.x,
                     y: boardLocation.y,
                 });
-                lastUAction = UserActions.DRAW;
                 break;
             case UserActions.SELECT:
                 de.endDraw();
@@ -178,9 +173,9 @@
                     newData.y = ih.currentPoint().y;
                     selectData = newData;
                 }
-                lastUAction = UserActions.SELECT;
                 break;
             default:
+                de.endDraw();
                 break;
         }
         // icanvasel.dispatchEvent(ev);

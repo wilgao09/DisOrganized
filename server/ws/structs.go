@@ -15,12 +15,20 @@ var UserColorPalette []UserColor = []UserColor{
 	"#FF37A6", "#FFCAE9", "#5CF64A", "#B56576", "#E56B6F", "#EAAC8B",
 }
 
+// type UserBrush struct {
+// 	strokeStyle string
+// 	lineWidth   int
+// }
+
+var DefaultBrush = "{\"strokeStyle\":\"#000000\",\"lineWidth\":5}"
+
 type UserData struct {
 	conn   *websocket.Conn
 	cookie uint64
 	name   string
 	color  UserColor
 	id     int
+	brush  string
 }
 
 // TODO: i feel like i might open a security hole here
@@ -63,6 +71,7 @@ func (cs *Connections) AddConnection(c *websocket.Conn, name string) (int, uint6
 		name:   name,
 		color:  UserColorPalette[uid%len(UserColorPalette)],
 		id:     uid,
+		brush:  DefaultBrush,
 	}
 	cs.conn_dict[uid] = &udt
 	cs.next_id++
@@ -103,6 +112,15 @@ func (ud *UserData) GetName() string {
 
 func (ud *UserData) GetColor() string {
 	return string(ud.color)
+}
+
+func (ud *UserData) GetBrush() string {
+	return ud.brush
+}
+
+func (ud *UserData) SetBrush(nb string) {
+	// TODO: validate that this is a valid brush somehow
+	ud.brush = nb
 }
 
 /**

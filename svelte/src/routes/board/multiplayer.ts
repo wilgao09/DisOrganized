@@ -5,10 +5,19 @@ import {
 } from "$lib/alerts";
 import { writable, type Writable } from "svelte/store";
 
+const userBrushFieldsStr = ["strokeStyle"] as const;
+const userBrushFieldsNum = ["lineWidth"] as const;
+
+export interface UserBrush {
+    strokeStyle: string;
+    lineWidth: number;
+}
+
 interface UserData {
     name: string;
     x: number;
     y: number;
+    brush: UserBrush;
 }
 
 /**
@@ -73,6 +82,10 @@ export default class MultiplayerManager {
             name: name,
             x: 0,
             y: 0,
+            brush: {
+                strokeStyle: "#000000",
+                lineWidth: 5,
+            },
         });
         this.listUpdate();
     }
@@ -82,6 +95,10 @@ export default class MultiplayerManager {
             name: name,
             x: 0,
             y: 0,
+            brush: {
+                strokeStyle: "#000000",
+                lineWidth: 5,
+            },
         });
         addAlert({
             type: AlertType.INFO,
@@ -120,6 +137,26 @@ export default class MultiplayerManager {
         return this.colors[id % this.colors.length];
     }
 
+    public setUserBrush(id: number, o: any) {
+        if (Number.isNaN(id) || o === undefined) return;
+        let ud = this.userMappings.get(id);
+        if (ud === undefined) {
+            return;
+        } else {
+            o = JSON.parse(o);
+            for (let f of userBrushFieldsNum) {
+                if (o[f] !== undefined) {
+                    ud.brush[f] = parseFloat(o[f]);
+                }
+            }
+            for (let f of userBrushFieldsStr) {
+                if (o[f] !== undefined) {
+                    ud.brush[f] = o[f];
+                }
+            }
+        }
+    }
+
     /**
      * THIS SHOULD ONLY BE CALLED WHEN SYNCING DATA
      * FOr new user entries or deltas, use addUser or movePointer
@@ -129,20 +166,20 @@ export default class MultiplayerManager {
      * @param data an array of ids and names in string form
      *
      */
-    public sync(data: string[]) {
-        for (let i = 0; i < data.length; i += 2) {
-            let t = this.userMappings.get(
-                parseInt(data[i])
-            );
-            if (t === undefined || t.name !== data[i + 1]) {
-                this.userMappings.set(parseInt(data[i]), {
-                    name: data[i + 1],
-                    x: 0,
-                    y: 0,
-                });
-            }
-        }
-    }
+    // public sync(data: string[]) {
+    //     for (let i = 0; i < data.length; i += 2) {
+    //         let t = this.userMappings.get(
+    //             parseInt(data[i])
+    //         );
+    //         if (t === undefined || t.name !== data[i + 1]) {
+    //             this.userMappings.set(parseInt(data[i]), {
+    //                 name: data[i + 1],
+    //                 x: 0,
+    //                 y: 0,
+    //             });
+    //         }
+    //     }
+    // }
 
     public getUserData(): Readonly<{
         name: string;

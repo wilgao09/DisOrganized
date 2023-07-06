@@ -1,3 +1,4 @@
+import CanvasManager from "./canvasmanager";
 import type MultiplayerManager from "./multiplayer";
 import { WSMessageCode } from "./wsutil";
 
@@ -9,17 +10,14 @@ const OPACITY = 0.5;
  * Does this by interacting with a ctx
  */
 export default class DrawingEngine {
-    private displayCanvas: HTMLCanvasElement;
-    private drawCanvas: HTMLCanvasElement;
-    private displayCtx: CanvasRenderingContext2D;
-    private drawCtx: CanvasRenderingContext2D;
+    // private displayCtx: CanvasRenderingContext2D;
+    // private drawCtx: CanvasRenderingContext2D;
 
-    private offScreenDrawCanvas: OffscreenCanvas;
-    private offScreenDrawCtx: OffscreenCanvasRenderingContext2D;
-    private offScreenDrawCanvasOriginDiff: [number, number];
+    // private offScreenDrawCanvas: OffscreenCanvas;
+    // private offScreenDrawCtx: OffscreenCanvasRenderingContext2D;
+    // private offScreenDrawCanvasOriginDiff: [number, number];
 
     private svg: SVGSVGElement;
-    private isDrawing: boolean;
     private svgElements: Map<number, Element>;
     private svgMenus: Map<number, [string, () => void][]>;
 
@@ -36,6 +34,7 @@ export default class DrawingEngine {
     public static readonly svgns: string =
         "http://www.w3.org/2000/svg";
     private mm: MultiplayerManager;
+    private cm: CanvasManager;
 
     private readySendPos: boolean = true;
 
@@ -50,35 +49,17 @@ export default class DrawingEngine {
         // usersvg: SVGSVGElement,
         mm: MultiplayerManager
     ) {
-        // try to get contexts
-        let icctx = interactiveCanvas.getContext("2d");
-        if (icctx === null) {
-            throw "Failed to get 2d context for interactive canvas";
-        }
-        let dcctx = interactiveCanvas.getContext("2d");
-        if (dcctx === null) {
-            throw "Failed to get 2d context for display canvas";
-        }
-        this.displayCanvas = displayCanvas;
-        this.drawCanvas = interactiveCanvas;
-        this.displayCtx = dcctx;
-        this.drawCtx = icctx;
-
-        this.offScreenDrawCanvas = new OffscreenCanvas(
+        // TODO: negative space preload, dimensions preload
+        this.cm = new CanvasManager(
+            displayCanvas,
+            interactiveCanvas,
+            0,
+            0,
             window.innerWidth,
             window.innerHeight
         );
-        let osdcctx =
-            this.offScreenDrawCanvas.getContext("2d");
-        if (osdcctx === null) {
-            throw "Failed to get 2d context for offscreen draw canvas";
-        }
-        this.offScreenDrawCtx = osdcctx;
-        // TODO: this needs to be overriden
-        this.offScreenDrawCanvasOriginDiff = [0, 0];
 
         this.svg = svg;
-        this.isDrawing = false;
         this.svgElements = new Map();
         this.mm = mm;
         this.svgMenus = new Map();
@@ -112,15 +93,6 @@ export default class DrawingEngine {
         this.svg.viewBox.baseVal.width = window.innerWidth;
         this.svg.viewBox.baseVal.height =
             window.innerHeight;
-
-        // sizing for canvas elements
-        this.displayCanvas.width = window.innerWidth;
-        this.displayCanvas.height = window.innerHeight;
-        this.drawCanvas.width = window.innerWidth;
-        this.drawCanvas.height = window.innerHeight;
-
-        this.drawCtx.strokeStyle = "#ff0000";
-        this.drawCtx.lineWidth = 50;
 
         this.mm.userMappingUpdate //TODO: make the cursors disappear after 15s // TODO:
             .subscribe((_) => {
@@ -329,245 +301,7 @@ export default class DrawingEngine {
         return [bubble, backingbox, np];
     }
 
-    /**
-     * Given a canvas and a pair of coordinates, resize its 2d context so that
-     * the point is included. The canvas has nothing erased. This function returns
-     * the canvas's context
-     * @param c A canvas object
-     * @param negx how much space has been allocated for negtive x coordinates (this value is not positive)
-     * @param negy how much space has been allocated for negative y coordinates (this value is not positive)
-     * @param x x coordiante to resize to
-     * @param y y coordiante to resize to
-     */
-    private resizeToFit(
-        c: HTMLCanvasElement | OffscreenCanvas,
-        negx: number,
-        negy: number,
-        x: number,
-        y: number
-    ): [number, number] {
-        let negspace: [number, number] = [negx, negy];
-
-        if (y > c.height + negspace[1]) {
-            // lies outside canvas on y pos
-            this.extendYPos(c, negspace[1], y);
-        }
-        if (y < negspace[1]) {
-            this.extendYNeg(c, negspace[1], y);
-            negspace[1] = y;
-        }
-        if (x > c.width + negspace[0]) {
-            // lies outside canvas on y pos
-            this.extendXPos(c, negspace[0], x);
-        }
-        if (x < negspace[0]) {
-            this.extendXNeg(c, negspace[0], x);
-            negspace[0] = x;
-        }
-        // console.log(negspace);
-        return negspace;
-    }
-
     // TODO: take the enxtension functions out
-
-    /**
-     * Extends a canvas c in the negative x direction. This function assumes that the x
-     * coordinate lies outside of the current space. The new x negative space is equal to
-     * the x value passed into this function
-     * @param c a canvas
-     * @param negx the current amount of space allocated for negative x values
-     * @param x the negative valiue we want to include
-     */
-    private extendXNeg(
-        c: HTMLCanvasElement | OffscreenCanvas,
-        negx: number,
-        x: number
-    ) {
-        let t = new OffscreenCanvas(c.width, c.height);
-        let tctx = t.getContext("2d");
-        if (tctx === null) {
-            throw new Error(
-                "failed to get context in resizing"
-            );
-        }
-        tctx.drawImage(c, 0, 0);
-        let d = negx - x;
-        c.width += d;
-        let ctx:
-            | CanvasRenderingContext2D
-            | OffscreenCanvasRenderingContext2D
-            | null = c.getContext("2d") as
-            | CanvasRenderingContext2D
-            | OffscreenCanvasRenderingContext2D
-            | null;
-        if (ctx === null) {
-            throw new Error(
-                "failed to get context in resizing"
-            );
-        }
-        ctx.drawImage(t, d, 0);
-    }
-
-    /**
-     * Extends a canvas c in the negative y direction. This function assumes that the y
-     * coordinate lies outside of the current space. The new y negative space is equal to
-     * the y value passed into this function
-     * @param c a canvas
-     * @param negy the current amount of space allocated for negative y values
-     * @param y the negative value we want to include
-     */
-    private extendYNeg(
-        c: HTMLCanvasElement | OffscreenCanvas,
-        negy: number,
-        y: number
-    ) {
-        let t = new OffscreenCanvas(c.width, c.height);
-        let tctx = t.getContext("2d");
-        if (tctx === null) {
-            throw new Error(
-                "failed to get context in resizing"
-            );
-        }
-        tctx.drawImage(c, 0, 0);
-        let d = negy - y;
-        c.height += d;
-        let ctx:
-            | CanvasRenderingContext2D
-            | OffscreenCanvasRenderingContext2D
-            | null = c.getContext("2d") as
-            | CanvasRenderingContext2D
-            | OffscreenCanvasRenderingContext2D
-            | null;
-        if (ctx === null) {
-            throw new Error(
-                "failed to get context in resizing"
-            );
-        }
-        ctx.drawImage(t, 0, y);
-    }
-
-    /**
-     * Extends a canvas c in the positive x direction. This function assumes that the x
-     * coordinate lies outside of the current space.
-     * @param c a canvas
-     * @param negx the current amount of space allocated for negative x values
-     * @param x the negative valiue we want to include
-     */
-    private extendXPos(
-        c: HTMLCanvasElement | OffscreenCanvas,
-        negx: number,
-        x: number
-    ) {
-        let t = new OffscreenCanvas(c.width, c.height);
-        let tctx = t.getContext("2d");
-        if (tctx === null) {
-            throw new Error(
-                "failed to get context in resizing"
-            );
-        }
-        tctx.drawImage(c, 0, 0);
-        let d = x - (c.width + negx);
-        c.width += d;
-        let ctx:
-            | CanvasRenderingContext2D
-            | OffscreenCanvasRenderingContext2D
-            | null = c.getContext("2d") as
-            | CanvasRenderingContext2D
-            | OffscreenCanvasRenderingContext2D
-            | null;
-        if (ctx === null) {
-            throw new Error(
-                "failed to get context in resizing"
-            );
-        }
-        ctx.drawImage(t, 0, 0);
-    }
-    /**
-     * Extends a canvas c in the positive y direction. This function assumes that the y
-     * coordinate lies outside of the current space.
-     * @param c a canvas
-     * @param negy the current amount of space allocated for negative y values
-     * @param y the negative value we want to include
-     */
-    private extendYPos(
-        c: HTMLCanvasElement | OffscreenCanvas,
-        negy: number,
-        y: number
-    ) {
-        let t = new OffscreenCanvas(c.width, c.height);
-        let tctx = t.getContext("2d");
-        if (tctx === null) {
-            throw new Error(
-                "failed to get context in resizing"
-            );
-        }
-        tctx.drawImage(c, 0, 0);
-        let d = y - (c.height + negy);
-
-        c.height += d;
-        let ctx:
-            | CanvasRenderingContext2D
-            | OffscreenCanvasRenderingContext2D
-            | null = c.getContext("2d") as
-            | CanvasRenderingContext2D
-            | OffscreenCanvasRenderingContext2D
-            | null;
-        if (ctx === null) {
-            throw new Error(
-                "failed to get context in resizing"
-            );
-        }
-        ctx.drawImage(t, 0, 0);
-    }
-    // TODO: determine which canvas we're drawing on
-    /**
-     * Draws on a canvas, starting a new draw if necessary.
-     * Note that ending a draw requires calling the endDraw function
-     * @param ev
-     * @returns
-     */
-    public draw(x: number, y: number) {
-        let targetContext = this.drawCtx;
-        let offscreenTargetContext = this.offScreenDrawCtx;
-
-        this.offScreenDrawCanvasOriginDiff =
-            this.resizeToFit(
-                this.offScreenDrawCanvas,
-                ...this.offScreenDrawCanvasOriginDiff,
-                x,
-                y
-            );
-        let xadj =
-            x - this.offScreenDrawCanvasOriginDiff[0];
-        let yadj =
-            y - this.offScreenDrawCanvasOriginDiff[1];
-
-        if (!this.isDrawing) {
-            this.isDrawing = true;
-            offscreenTargetContext.moveTo(xadj, yadj);
-            offscreenTargetContext.beginPath();
-            targetContext.moveTo(x, y);
-            targetContext.beginPath();
-        } else {
-            offscreenTargetContext.lineTo(xadj, yadj);
-            offscreenTargetContext.stroke();
-            targetContext.lineTo(x, y);
-            targetContext.stroke();
-        }
-    }
-
-    public endDraw() {
-        this.isDrawing = false;
-    }
-
-    public clearRect(
-        x0: number,
-        y0: number,
-        w: number,
-        h: number
-    ) {
-        // this.drawCtx.clearRect(x0, y0, w, h);
-    }
 
     /**
      * Given an id, delete it from the board and free all relevant resources.
@@ -619,8 +353,6 @@ export default class DrawingEngine {
             }
             k.setAttribute(key, val);
         }
-
-        // console.log(k);
         this.svgMenus.set(o.id, o.menu);
         this.addSVG(o.id, k, o.onmount);
     }
@@ -691,52 +423,10 @@ export default class DrawingEngine {
         this.svg.viewBox.baseVal.x += dx;
         this.svg.viewBox.baseVal.y += dy;
 
-        // this.svg.viewBox.baseVal.x += dx;
-        // this.svg.viewBox.baseVal.y += dy;
-        //TODO: redraw display canvas
-        //move coordinate system
-        // this.displayCtx.transform(
-        //     1,
-        //     0,
-        //     0,
-        //     1,
-        //     -1 * this.svg.viewBox.baseVal.x,
-        //     -1 * this.svg.viewBox.baseVal.y
-        // );
-        this.drawCtx.setTransform(
-            1,
-            0,
-            0,
-            1,
+        this.cm.panTo(
             -1 * this.svg.viewBox.baseVal.x,
             -1 * this.svg.viewBox.baseVal.y
         );
-        //clear the board
-        // TODO: more narrow
-        this.drawCtx.clearRect(
-            this.offScreenDrawCanvasOriginDiff[0],
-            this.offScreenDrawCanvasOriginDiff[1],
-            this.offScreenDrawCanvas.width,
-            this.offScreenDrawCanvas.height
-        );
-
-        //draw the offscreen canvas
-        this.drawCtx.drawImage(
-            this.offScreenDrawCanvas,
-            this.offScreenDrawCanvasOriginDiff[0],
-            this.offScreenDrawCanvasOriginDiff[1]
-        );
-
-        // this.centerel.setAttributeNS(
-        //     null,
-        //     "cx",
-        //     `${this.xcenter}`
-        // );
-        // this.centerel.setAttributeNS(
-        //     null,
-        //     "cy",
-        //     `${this.ycenter}`
-        // );
     }
 
     /**
@@ -782,17 +472,6 @@ export default class DrawingEngine {
         };
     }
 
-    // public eventToBoardCoords(
-    //     ev: PointerEvent
-    // ): [number, number][] {
-    //     return [
-    //         this.mapScreenPointToBoardPoint(
-    //             ev.clientX,
-    //             ev.clientY
-    //         ),
-    //     ];
-    // }
-
     public resize() {
         this.xcenter +=
             (window.innerWidth -
@@ -811,21 +490,7 @@ export default class DrawingEngine {
         this.svg.viewBox.baseVal.height =
             window.innerHeight;
 
-        // TODO: replace canvas resizing; use offscreencanvas so that drawings arent erased
-        this.displayCanvas.width = window.innerWidth;
-        this.displayCanvas.height = window.innerHeight;
-        this.drawCanvas.width = window.innerWidth;
-        this.drawCanvas.height = window.innerHeight;
-        // this.centerel.setAttributeNS(
-        //     null,
-        //     "cx",
-        //     `${this.xcenter}`
-        // );
-        // this.centerel.setAttributeNS(
-        //     null,
-        //     "cy",
-        //     `${this.ycenter}`
-        // );
+        this.cm.resize();
     }
 
     public getMenuOptions(
@@ -837,5 +502,16 @@ export default class DrawingEngine {
         } else {
             return retrieved;
         }
+    }
+
+    /**
+     * Pass through
+     */
+
+    public draw(x: number, y: number) {
+        this.cm.draw(x, y);
+    }
+    public endDraw() {
+        this.cm.endDraw();
     }
 }

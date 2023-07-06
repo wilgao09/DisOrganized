@@ -15,6 +15,8 @@ export default class InputManager {
     private usermap: Map<UserInputs, UserActions>;
     // private inputReady : boolean;
     private lastInput: PointerState;
+    private currMove: UserActions;
+    private lastMove: UserActions;
 
     private prevLocation: {
         x: number;
@@ -48,11 +50,19 @@ export default class InputManager {
 
         this.prevLocation = { x: 0, y: 0 };
         this.currLocation = { x: 0, y: 0 };
+
+        this.lastMove = UserActions.NONE;
+        this.currMove = UserActions.NONE;
     }
 
     private pushNewPoint(x: number, y: number) {
         this.prevLocation = this.currLocation;
         this.currLocation = { x: x, y: y };
+    }
+
+    private pushNewAction(a: UserActions) {
+        this.lastMove = this.currMove;
+        this.currMove = a;
     }
 
     //TODO: warnings
@@ -105,7 +115,7 @@ export default class InputManager {
                 ],
             },
         };
-
+        let tor: UserActions = UserActions.NONE;
         for (const [k, v] of Object.entries(t)) {
             if (ev.pointerType === k) {
                 this.pushNewPoint(ev.clientX, ev.clientY);
@@ -114,27 +124,31 @@ export default class InputManager {
                     ev.type === "pointermove" &&
                     this.lastInput === v.s
                 ) {
-                    return (
+                    tor =
                         this.usermap.get(v.e[0]) ??
-                        UserActions.NONE
-                    );
+                        UserActions.NONE;
                 }
                 if (ev.type === "pointerdown") {
                     this.lastInput = v.s;
 
-                    return (
+                    tor =
                         this.usermap.get(v.e[1]) ??
-                        UserActions.NONE
-                    );
+                        UserActions.NONE;
                 }
                 if (ev.type === "pointerup") {
                     this.lastInput = PointerState.NONE;
-                    return UserActions.SELECT;
+                    if (
+                        this.currMove === UserActions.NONE
+                    ) {
+                        tor = UserActions.SELECT;
+                    } else {
+                        tor = UserActions.NONE;
+                    }
                 }
             }
         }
-
-        return UserActions.NONE;
+        this.pushNewAction(tor);
+        return tor;
     }
 
     public actionMeta(e: PointerEvent): {
@@ -172,5 +186,13 @@ export default class InputManager {
         y: number;
     }> {
         return this.currLocation;
+    }
+
+    public prevAction(): UserActions {
+        return this.lastMove;
+    }
+
+    public currAction(): UserActions {
+        return this.currMove;
     }
 }
