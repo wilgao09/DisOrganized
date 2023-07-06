@@ -31,6 +31,8 @@ const ( // TODO: dont make these globals like this
 	GET_MY_DATA
 	SET_BRUSH
 	GET_BRUSH
+	BRUSH_DOWN
+	BRUSH_UP
 
 	ERR = 127
 )
@@ -152,4 +154,13 @@ func setUpWSHandlers() {
 		wsutil.WriteMessageToUserConn(c, GET_BRUSH, connstruct.Get(uid).GetBrush())
 
 	})
+
+	connstruct.AddHandler(BRUSH_DOWN, func(c *websocket.Conn, i int, s string) {
+		connstruct.SendToAll(BRUSH_DOWN, fmt.Sprintf("%d", i), []int{i})
+	})
+
+	connstruct.AddHandler(BRUSH_UP, func(c *websocket.Conn, i int, s string) {
+		connstruct.SendToAll(BRUSH_UP, fmt.Sprintf("%d", i), []int{i})
+	})
+
 }

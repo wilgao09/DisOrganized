@@ -96,6 +96,20 @@ func (cs *Connections) Get(id int) *UserData {
 	return cs.conn_dict[id]
 }
 
+func (cs *Connections) SendToAll(id int, s string, excludes []int) {
+	var excludeMap = make(map[int]bool)
+	for _, v := range excludes {
+		excludeMap[v] = true
+	}
+
+	for k, v := range cs.conn_dict {
+		if excludeMap[k] {
+			continue
+		}
+		WriteMessageToUserDataStruct(v, id, s)
+	}
+}
+
 func WriteMessageToUserDataStruct(ud *UserData, id int, s string) {
 	ud.conn.WriteMessage(websocket.TextMessage,
 		[]byte(fmt.Sprintf("%c%s", id+32, s)))

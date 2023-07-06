@@ -4,20 +4,18 @@ import {
     UserAlerts,
 } from "$lib/alerts";
 import { writable, type Writable } from "svelte/store";
-
-const userBrushFieldsStr = ["strokeStyle"] as const;
-const userBrushFieldsNum = ["lineWidth"] as const;
-
-export interface UserBrush {
-    strokeStyle: string;
-    lineWidth: number;
-}
+import {
+    userBrushFieldsNum,
+    type UserBrush,
+    userBrushFieldsStr,
+} from "./usertypes";
 
 interface UserData {
     name: string;
     x: number;
     y: number;
     brush: UserBrush;
+    drawing: boolean;
 }
 
 /**
@@ -86,6 +84,7 @@ export default class MultiplayerManager {
                 strokeStyle: "#000000",
                 lineWidth: 5,
             },
+            drawing: false,
         });
         this.listUpdate();
     }
@@ -99,6 +98,7 @@ export default class MultiplayerManager {
                 strokeStyle: "#000000",
                 lineWidth: 5,
             },
+            drawing: false,
         });
         addAlert({
             type: AlertType.INFO,
@@ -154,6 +154,15 @@ export default class MultiplayerManager {
                     ud.brush[f] = o[f];
                 }
             }
+            this.anyUpdate();
+        }
+    }
+
+    public setUserDrawingState(id: number, state: boolean) {
+        let o = this.userMappings.get(id);
+        if (o !== undefined) {
+            o.drawing = state;
+            this.anyUpdate();
         }
     }
 

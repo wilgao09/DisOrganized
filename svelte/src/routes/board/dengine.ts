@@ -129,6 +129,15 @@ export default class DrawingEngine {
             if (locy === v.y && locx === v.x) {
                 continue;
             }
+            if (v.drawing) {
+                this.cm.foreignDraw(
+                    v.brush,
+                    locx,
+                    locy,
+                    v.x,
+                    v.y
+                );
+            }
             this.animateTriplet(
                 ...els,
                 locx,

@@ -18,6 +18,8 @@ export enum WSMessageCode {
     GET_MY_DATA,
     SET_BRUSH,
     GET_BRUSH,
+    BRUSH_DOWN,
+    BRUSH_UP,
 }
 
 interface SocketMessage {
@@ -151,6 +153,19 @@ export function defaultMessageHandler(
             case WSMessageCode.SET_BRUSH:
                 data = m.msg.split("\v");
                 mm.setUserBrush(parseInt(data[0]), data[1]);
+                break;
+            case WSMessageCode.BRUSH_UP:
+                mm.setUserDrawingState(
+                    parseInt(m.msg),
+                    false
+                );
+                break;
+            case WSMessageCode.BRUSH_DOWN:
+                mm.setUserDrawingState(
+                    parseInt(m.msg),
+                    true
+                );
+                break;
         }
     };
 }

@@ -1,4 +1,4 @@
-import { UserActions, UserInputs } from "./userenums";
+import { UserActions, UserInputs } from "./usertypes";
 
 enum PointerState {
     PEN,

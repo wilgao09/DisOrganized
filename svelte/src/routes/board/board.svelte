@@ -4,7 +4,7 @@
     import DrawingEngine from "./dengine";
     import * as wsutil from "./wsutil";
     import fetchPlugins from "./pluginfetch";
-    import { UserInputs, UserActions } from "./userenums";
+    import { UserInputs, UserActions } from "./usertypes";
     import { declName, destIp, destPort } from "$lib/dest";
     import { get } from "svelte/store";
     import { onMount } from "svelte";
@@ -47,14 +47,7 @@
         id: NaN,
     };
     onMount(() => {
-        let icanvasctx = icanvasel.getContext("2d");
-        let dcanvasctx = dcanvasel.getContext("2d");
-        if (
-            icanvasel !== null &&
-            icanvasctx !== null &&
-            dcanvasel !== null &&
-            dcanvasctx !== null
-        )
+        if (icanvasel !== null && dcanvasel !== null)
             de = new DrawingEngine(
                 icanvasel,
                 dcanvasel,
@@ -66,15 +59,10 @@
                 "panic: drawingengine couldnt be initialized"
             );
 
-        icanvasel.height = window.innerHeight;
-        icanvasel.width = window.innerWidth;
-
         // board dims
         let ob = new ResizeObserver((entries) => {
             for (const e of entries) {
                 if (e.target === boardFrame) {
-                    // alert("resized");
-                    console.log(e);
                     de.resize();
                 }
             }

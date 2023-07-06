@@ -1,3 +1,11 @@
+import {
+    userBrushFieldsNum,
+    type UserBrush,
+    userBrushFieldsStr,
+    defaultBrush,
+} from "./usertypes";
+import * as wsutil from "./wsutil";
+
 export default class CanvasManager {
     private globalCanvas: HTMLCanvasElement;
     private localCanvas: HTMLCanvasElement;
@@ -10,6 +18,14 @@ export default class CanvasManager {
     private negspace: [number, number];
 
     private isDrawing: boolean;
+
+    private cursorCoords: {
+        x: number;
+        y: number;
+    };
+
+    private myBrush: UserBrush;
+    // private currentBrush: UserBrush;
 
     private getElement2DContext(
         c: HTMLCanvasElement
@@ -59,8 +75,17 @@ export default class CanvasManager {
         this.negspace = [negXSpace, negYSpace];
         this.isDrawing = false;
 
-        this.localCtx.strokeStyle = "#ff0000";
-        this.localCtx.lineWidth = 50;
+        this.cursorCoords = {
+            x: 0,
+            y: 0,
+        };
+        // this.currentBrush = defaultBrush;
+        this.myBrush = defaultBrush;
+        // TODO: find out why theres a race contiion
+        setTimeout(() => {
+            this.setBrush(this.localCtx, defaultBrush);
+            this.setBrush(this.localOSCtx, defaultBrush);
+        }, 1000);
     }
 
     public undo() {}
@@ -264,6 +289,10 @@ export default class CanvasManager {
      * @returns
      */
     public draw(x: number, y: number) {
+        this.cursorCoords = {
+            x: x,
+            y: y,
+        };
         let targetContext = this.localCtx;
         let offscreenTargetContext = this.localOSCtx;
 
@@ -278,6 +307,10 @@ export default class CanvasManager {
 
         if (!this.isDrawing) {
             this.isDrawing = true;
+            window.boardSocket({
+                msgType: wsutil.WSMessageCode.BRUSH_DOWN,
+                msg: "",
+            });
             offscreenTargetContext.moveTo(xadj, yadj);
             offscreenTargetContext.beginPath();
             targetContext.moveTo(x, y);
@@ -291,7 +324,14 @@ export default class CanvasManager {
     }
 
     public endDraw() {
+        if (this.isDrawing == false) {
+            return;
+        }
         this.isDrawing = false;
+        window.boardSocket({
+            msgType: wsutil.WSMessageCode.BRUSH_UP,
+            msg: "",
+        });
     }
 
     /**
@@ -335,5 +375,46 @@ export default class CanvasManager {
             this.localOSCanvas,
             ...this.negspace
         );
+    }
+
+    private setBrush(
+        c:
+            | CanvasRenderingContext2D
+            | OffscreenCanvasRenderingContext2D,
+        b: UserBrush
+    ) {
+        console.log(c);
+        for (let f of userBrushFieldsStr) {
+            c[f] = b[f];
+            console.log(`set ${f} to ${c[f]}`);
+        }
+        for (let f of userBrushFieldsNum) {
+            c[f] = b[f];
+            console.log(`set ${f} to ${c[f]}`);
+        }
+    }
+
+    public foreignDraw(
+        b: UserBrush,
+        x0: number,
+        y0: number,
+        xf: number,
+        yf: number
+    ) {
+        // TODO: figure out what im actually drawing on
+        this.setBrush(this.localCtx, b);
+        this.localCtx.beginPath();
+        this.localCtx.moveTo(x0, y0);
+
+        this.localCtx.lineTo(xf, yf);
+        this.localCtx.stroke();
+        this.setBrush(this.localCtx, this.myBrush);
+        this.localCtx.moveTo(
+            this.cursorCoords.x,
+            this.cursorCoords.y
+        );
+        if (this.isDrawing) {
+            this.localCtx.beginPath();
+        }
     }
 }
