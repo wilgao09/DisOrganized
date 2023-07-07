@@ -12,6 +12,7 @@
     import Toolbar from "./Toolbar.svelte";
     import MultiplayerManager from "./multiplayer";
     import SelectedMenu from "./SelectedMenu.svelte";
+    import { loadingCompleted } from "$lib/firstload";
     // import DrawingEngine from "./dengine";
 
     let wsurl = `ws://${encodeURIComponent(
@@ -95,6 +96,8 @@
                         msg: "",
                     });
                 }, 30000);
+
+                loadingCompleted.set(true);
             }
         );
         fetchPlugins(ph, ih, () => {
