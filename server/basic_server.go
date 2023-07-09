@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"path"
 
@@ -18,20 +19,26 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
+import "net/url"
 
 const portno = 11326
 
-// "github.com/gin-gonic/gin"
+// NewProxy takes target host and creates a reverse proxy
+func NewProxy(targetHost string) (*httputil.ReverseProxy, error) {
+	url, err := url.Parse(targetHost)
+	if err != nil {
+		return nil, err
+	}
 
-// func checkError(err error, phase string) {
-// 	if err != nil {
-// 		fmt.Println("failed at ", phase, " for the following reason")
-// 		fmt.Println(err)
-// 		return
-// 	}
-// 	fmt.Println("passed phase ", phase)
+	return httputil.NewSingleHostReverseProxy(url), nil
+}
 
-// }
+// ProxyRequestHandler handles the http request using proxy
+func ProxyRequestHandler(proxy *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		proxy.ServeHTTP(w, r)
+	}
+}
 
 func main() {
 	// log file location
@@ -113,15 +120,6 @@ func main() {
 			"msg": "HELLO WORLD",
 		})
 	})
-	fmt.Println("??")
-	// server.GET("/api/retrieveFile")
-	// server.GET("/api/retrieveConfig")
-
-	// server.POST("/api/addDep")
-	// server.POST("/api/createFile")
-	// server.POST("/api/openFile")
-	// server.POST("/api/closeFile")
-	// server.POST("/api/diff/:name")
 
 	server.GET("/connectws/:name", func(ctx *gin.Context) {
 
@@ -176,6 +174,15 @@ func main() {
 		var b = ipcutil.GetCanvas()
 		// send
 		ctx.JSON(200, b)
+	})
+
+	// reverse proxy all other paths
+	proxy, err := NewProxy("http://localhost:11723")
+	if err != nil {
+		panic(err)
+	}
+	server.NoRoute(func(ctx *gin.Context) {
+		ProxyRequestHandler(proxy)(ctx.Writer, ctx.Request)
 	})
 
 	log.Printf("Spawning stdio listeners\n")
