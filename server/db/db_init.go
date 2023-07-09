@@ -49,6 +49,7 @@ func Init(dbdirpath string) error {
 	return nil
 }
 
+// build the DoDb object based on the last Init call
 func Init_struct() (DoDb, error) {
 
 	var dbstruct DoDb

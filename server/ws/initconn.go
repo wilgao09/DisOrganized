@@ -3,6 +3,7 @@ package ws
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -77,15 +78,22 @@ func listenws(c *websocket.Conn, uid int) {
 // EstablishConnection takes a request and upgrades the connection to a websocket.
 // This function does not return.
 func EstablishConnection(w http.ResponseWriter, r *http.Request, name string) {
-
-	conn, err := upgrader.Upgrade(w, r, nil)
+	// TODO: pull the cookie setting code out and into the main server file
+	cookie := fmt.Sprintf("%d", rand.Uint64())
+	cookieObj := http.Cookie{
+		Name: "isAccepted", Value: cookie, Path: "/", HttpOnly: true,
+		SameSite: http.SameSiteNoneMode, Secure: true,
+	}
+	headers := make(http.Header)
+	headers.Add("Set-Cookie", cookieObj.String())
+	conn, err := upgrader.Upgrade(w, r, headers)
 	if err != nil {
 		log.Println("error upgrading")
 		log.Println(err)
 		return //TODO: how does this error out?
 	}
 	// returns an id and a cookie
-	uid, _ := currconnections.AddConnection(conn, name)
+	uid := currconnections.AddConnection(conn, name, cookie)
 
 	// alert all other users that a new user has joined
 	userdata, _ := GetConnectionsStruct().GetUserData()

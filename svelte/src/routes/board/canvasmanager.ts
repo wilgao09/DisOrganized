@@ -1,3 +1,4 @@
+import { get } from "svelte/store";
 import {
     userBrushFieldsNum,
     type UserBrush,
@@ -5,6 +6,7 @@ import {
     defaultBrush,
 } from "./usertypes";
 import * as wsutil from "./wsutil";
+import { destIp, destPort } from "$lib/dest";
 
 export default class CanvasManager {
     private globalCanvas: HTMLCanvasElement;
@@ -65,14 +67,65 @@ export default class CanvasManager {
         );
 
         this.localOSCanvas = new OffscreenCanvas(
-            height,
-            width
+            width,
+            height
         );
         this.localOSCtx = this.getOS2DContext(
             this.localOSCanvas
         );
-
         this.negspace = [negXSpace, negYSpace];
+        // fill in the electronAPI getBoardURL function
+        if (window.electronAPI !== undefined) {
+            let getCanvasURL = (): Promise<{
+                negX: number;
+                negY: number;
+                width: number;
+                height: number;
+                url: string;
+            }> => {
+                return this.localOSCanvas
+                    .convertToBlob()
+                    .then((d) => {
+                        return new Promise((res, rej) => {
+                            let fr = new FileReader();
+
+                            fr.onload = () =>
+                                res({
+                                    negX: this.negspace[0],
+                                    negY: this.negspace[1],
+                                    width: this
+                                        .localOSCanvas
+                                        .width,
+                                    height: this
+                                        .localOSCanvas
+                                        .height,
+                                    url: fr.result as string,
+                                });
+                            fr.onerror = () =>
+                                rej(fr.error);
+                            fr.readAsDataURL(d);
+                        });
+                    });
+            };
+            // define the canvas-to-url function
+            window.electronAPI.setGetLocalCanvasURL(
+                getCanvasURL
+            );
+            console.log("set getLocalCanvasURL");
+            //try to fetch a stored canvas
+            window.electronAPI
+                .loadSavedCanvas()
+                .then((o) => {
+                    this.updateOSCanvas(o);
+                });
+            // periodically send the canvas to the server
+            setInterval(() => {
+                getCanvasURL().then((d) => {
+                    window.electronAPI.saveCanvas(d);
+                });
+            }, 15000);
+        }
+
         this.isDrawing = false;
 
         this.cursorCoords = {
@@ -82,10 +135,9 @@ export default class CanvasManager {
         // this.currentBrush = defaultBrush;
         this.myBrush = defaultBrush;
         // TODO: find out why theres a race contiion
-        setTimeout(() => {
-            this.setBrush(this.localCtx, defaultBrush);
-            this.setBrush(this.localOSCtx, defaultBrush);
-        }, 1000);
+
+        this.setBrush(this.localCtx, defaultBrush);
+        this.setBrush(this.localOSCtx, defaultBrush);
     }
 
     public undo() {}
@@ -165,7 +217,7 @@ export default class CanvasManager {
                 "failed to get context in resizing"
             );
         }
-        ctx.drawImage(t, 0, y);
+        ctx.drawImage(t, 0, d);
     }
 
     /**
@@ -302,6 +354,8 @@ export default class CanvasManager {
             x,
             y
         );
+        this.setBrush(this.localOSCtx, this.myBrush);
+        // xadj and yadj are adjsuted to be >= 0
         let xadj = x - this.negspace[0];
         let yadj = y - this.negspace[1];
 
@@ -383,15 +437,18 @@ export default class CanvasManager {
             | OffscreenCanvasRenderingContext2D,
         b: UserBrush
     ) {
-        console.log(c);
+        // console.log(c);
         for (let f of userBrushFieldsStr) {
             c[f] = b[f];
-            console.log(`set ${f} to ${c[f]}`);
+            // console.log(`set ${f} to ${c[f]}`);
         }
         for (let f of userBrushFieldsNum) {
             c[f] = b[f];
-            console.log(`set ${f} to ${c[f]}`);
+            // console.log(`set ${f} to ${c[f]}`);
         }
+        // TODO: maybe move this
+        c.lineCap = "round";
+        c.lineJoin = "round";
     }
 
     public foreignDraw(
@@ -401,11 +458,28 @@ export default class CanvasManager {
         xf: number,
         yf: number
     ) {
+        this.negspace = this.resizeToFit(
+            this.localOSCanvas,
+            ...this.negspace,
+            x0,
+            y0
+        );
+        this.negspace = this.resizeToFit(
+            this.localOSCanvas,
+            ...this.negspace,
+            xf,
+            yf
+        );
+
+        // xadj and yadj are adjsuted to be >= 0
+        let x0adj = x0 - this.negspace[0];
+        let y0adj = y0 - this.negspace[1];
+        let xfadj = xf - this.negspace[0];
+        let yfadj = yf - this.negspace[1];
         // TODO: figure out what im actually drawing on
         this.setBrush(this.localCtx, b);
         this.localCtx.beginPath();
         this.localCtx.moveTo(x0, y0);
-
         this.localCtx.lineTo(xf, yf);
         this.localCtx.stroke();
         this.setBrush(this.localCtx, this.myBrush);
@@ -415,6 +489,84 @@ export default class CanvasManager {
         );
         if (this.isDrawing) {
             this.localCtx.beginPath();
+        }
+
+        this.setBrush(this.localOSCtx, b);
+        this.localOSCtx.beginPath();
+        this.localOSCtx.moveTo(x0adj, y0adj);
+        this.localOSCtx.lineTo(xfadj, yfadj);
+        this.localOSCtx.stroke();
+        this.setBrush(this.localOSCtx, this.myBrush);
+        this.localOSCtx.moveTo(
+            this.cursorCoords.x - this.negspace[0],
+            this.cursorCoords.y - this.negspace[1]
+        );
+        if (this.isDrawing) {
+            this.localOSCtx.beginPath();
+        }
+    }
+
+    // ask for the latest board from the server
+    public syncWithServer() {
+        fetch(
+            `http://${get(destIp)}:${get(destPort)}/canvas`,
+            {
+                mode: "cors",
+                credentials: "include",
+            }
+        )
+            .then((v) => {
+                return v.json();
+            })
+            .then((t) => {
+                console.log(t);
+                let data = t.split("\v");
+                console.log(data);
+                if (data.length === 5) {
+                    console.log("UPDATING OSCANVAS");
+                    this.updateOSCanvas({
+                        negX: parseFloat(data[0]),
+                        negY: parseFloat(data[1]),
+                        width: parseFloat(data[2]),
+                        height: parseFloat(data[3]),
+                        url: data[4],
+                    });
+                }
+            });
+    }
+
+    private updateOSCanvas(o: {
+        negX: number;
+        negY: number;
+        width: number;
+        height: number;
+        url: string;
+    }) {
+        if (o.height != 0 && o.width != 0) {
+            this.localOSCanvas.width = o.width;
+            this.localOSCanvas.height = o.height;
+            this.negspace = [o.negX, o.negY];
+            let img = new Image(o.width, o.height);
+            img.src = o.url;
+            img.onload = () => {
+                this.localOSCtx.drawImage(img, 0, 0);
+                this.localCtx.clearRect(
+                    ...this.negspace,
+                    this.localOSCanvas.width,
+                    this.localOSCanvas.height
+                );
+
+                //draw the offscreen canvas
+                this.localCtx.drawImage(
+                    this.localOSCanvas,
+                    ...this.negspace
+                );
+                this.setBrush(
+                    this.localOSCtx,
+                    this.myBrush
+                );
+                this.setBrush(this.localCtx, this.myBrush);
+            };
         }
     }
 }

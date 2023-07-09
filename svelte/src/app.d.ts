@@ -9,11 +9,35 @@ declare global {
     }
     interface Window {
         electronAPI: {
+            // provided by preload
             ping: () => void;
             getAvailableBoards: () => Promise<string[]>;
             openBoard: (name: string) => Promise<string>;
             createBoard: (name: string) => Promise<boolean>;
             deleteBoard: (name: string) => Promise<boolean>;
+            loadSavedCanvas: () => Promise<{
+                negX: number;
+                negY: number;
+                width: number;
+                height: number;
+                url: string;
+            }>;
+            saveCanvas: ({
+                negX: number,
+                negY: number,
+                width: number,
+                height: number,
+                url: string,
+            }) => void;
+            setGetLocalCanvasURL: (
+                cb: () => Promise<{
+                    negX: number;
+                    negY: number;
+                    width: number;
+                    height: number;
+                    url: string;
+                }>
+            ) => void;
         };
         boardSocket: (msg: SocketMessage) => void;
     }

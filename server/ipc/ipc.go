@@ -25,10 +25,6 @@ var IPCStatus = struct {
 *	Does not return
  */
 func IpcListen() {
-
-	// do some prepwork here
-	// make sure the directory exists
-
 	reader := bufio.NewReader(os.Stdin)
 	IPCStatus.hasValue.Lock()
 	for {
@@ -40,6 +36,7 @@ func IpcListen() {
 		s = s[:len(s)-1]
 		log.Printf("New raw: <%s> len %d\n", s, len(s))
 		cmd, bod := parseIPCComand(s)
+		// a command is eit
 		switch cmd {
 		case CLOSE_SERVER:
 			log.Printf("got close server request\n")
@@ -104,10 +101,27 @@ func IpcListen() {
 			} else {
 				ipcSend(DELETE_BOARD, "0")
 			}
+		case CANVAS_URL:
+			if len(bod) == 0 {
+				// admin is asking for the disk copy
+				ipcSend(CANVAS_URL,
+					db.GetCurrentOpenBoard().GetCanvas())
+				goto next
+			} else {
+				// admin wants to set the current board
+				// or someone is asking
+				db.GetCurrentOpenBoard().SetCanvas(bod)
+				// possible that this call was a result of someone asking
+			}
+
 		default:
 			log.Printf("Unrecognized command %d", cmd)
 		}
 
+		// this is for send and waits
+		// if the incoming message expects to be
+		// a response to a previous message sent out by the server
+		// it will need to bounce through this set of lock
 		IPCStatus.dataReceived = s
 		IPCStatus.hasValue.Unlock()
 
@@ -146,7 +160,7 @@ func ipcSendAndWait(c IPCCommand, s string) (IPCCommand, string) { // to be call
 	res := IPCStatus.dataReceived
 	IPCStatus.doneReading.Unlock()
 	IPCStatus.hasValue.Unlock()
-	time.Sleep(time.Second / 10) //TODO: remove this and fix the larger concurrency issue
+	time.Sleep(time.Second / 100) //TODO: remove this and fix the larger concurrency issue
 	IPCStatus.lock.Unlock()
 	return parseIPCComand(res)
 }

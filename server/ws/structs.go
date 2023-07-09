@@ -3,7 +3,6 @@ package ws
 import (
 	"fmt"
 	"log"
-	"math/rand"
 
 	"github.com/gorilla/websocket"
 )
@@ -15,16 +14,11 @@ var UserColorPalette []UserColor = []UserColor{
 	"#FF37A6", "#FFCAE9", "#5CF64A", "#B56576", "#E56B6F", "#EAAC8B",
 }
 
-// type UserBrush struct {
-// 	strokeStyle string
-// 	lineWidth   int
-// }
-
 var DefaultBrush = "{\"strokeStyle\":\"#000000\",\"lineWidth\":5}"
 
 type UserData struct {
 	conn   *websocket.Conn
-	cookie uint64
+	cookie string
 	name   string
 	color  UserColor
 	id     int
@@ -62,9 +56,8 @@ func CreateConnectionsStruct() *Connections {
 	return &c
 }
 
-func (cs *Connections) AddConnection(c *websocket.Conn, name string) (int, uint64) {
-	// TODO: more secure cookies
-	uid, cookie := cs.next_id, rand.Uint64()
+func (cs *Connections) AddConnection(c *websocket.Conn, name string, cookie string) int {
+	uid := cs.next_id
 	udt := UserData{
 		conn:   c,
 		cookie: cookie,
@@ -75,7 +68,7 @@ func (cs *Connections) AddConnection(c *websocket.Conn, name string) (int, uint6
 	}
 	cs.conn_dict[uid] = &udt
 	cs.next_id++
-	return uid, cookie
+	return uid
 }
 
 func (cs *Connections) AddHandler(id int, handler func(*websocket.Conn, int, string)) {
@@ -108,6 +101,15 @@ func (cs *Connections) SendToAll(id int, s string, excludes []int) {
 		}
 		WriteMessageToUserDataStruct(v, id, s)
 	}
+}
+
+func (cs *Connections) UserDataOfCookie(cookie string) *UserData {
+	for _, v := range cs.conn_dict {
+		if v.cookie == cookie {
+			return v
+		}
+	}
+	return nil
 }
 
 func WriteMessageToUserDataStruct(ud *UserData, id int, s string) {

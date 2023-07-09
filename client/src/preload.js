@@ -15,6 +15,7 @@ const ea = {
         OPEN_BOARD: 6,
         CLOSE_BOARD: 7,
         DELETE_BOARD: 8,
+        CANVAS_URL: 9,
     },
     fns: {
         encode: (cmd, str = "") =>
@@ -80,6 +81,16 @@ const ea = {
     },
 };
 
+let getLocalCanvasURL = () => {
+    return {
+        negX: 0,
+        negY: 0,
+        width: 0,
+        height: 0,
+        url: "",
+    };
+};
+
 contextBridge.exposeInMainWorld("electronAPI", {
     ping: () => ipcRenderer.send("myelectronping"),
     getAvailableBoards: () => {
@@ -118,7 +129,43 @@ contextBridge.exposeInMainWorld("electronAPI", {
                 }
             });
     },
+    loadSavedCanvas: () => {
+        return ea.queue
+            .send(ea.commands.CANVAS_URL, "", true)
+            .then((d) => {
+                let p = d.split("\v");
+                if (p.length !== 5) {
+                    return {
+                        negX: 0,
+                        negY: 0,
+                        width: 0,
+                        height: 0,
+                        url: "",
+                    };
+                }
+                return {
+                    negX: parseFloat(p[0]),
+                    negY: parseFloat(p[1]),
+                    width: parseFloat(p[2]),
+                    height: parseFloat(p[3]),
+                    url: p[4],
+                };
+            });
+    },
+
+    saveCanvas: ({ negX, negY, width, height, url }) => {
+        ea.queue.send(
+            ea.commands.CANVAS_URL,
+            `${negX}\v${negY}\v${width}\v${height}\v${url}`
+        );
+    },
+
+    setGetLocalCanvasURL: (cb) => {
+        getLocalCanvasURL = cb;
+    },
 });
+
+// filled in by svelte app
 
 // receiving end in the realworld
 ipcRenderer.on("myelectronpong", (ev, msg) => {
@@ -142,6 +189,22 @@ ipcRenderer.on(chan, (ev, msg) => {
             } else {
                 ea.queue.send(ea.commands.REJECT_USER);
             }
+        } else if (cmd === ea.commands.CANVAS_URL) {
+            // if the server is asking us
+            // the server wants a fresh copy
+            getLocalCanvasURL()
+                .then((dataobj) => {
+                    ea.queue.send(
+                        ea.commands.CANVAS_URL,
+                        `${dataobj.negX}\v${dataobj.negY}\v${dataobj.width}\v${dataobj.height}\v${dataobj.url}`
+                    );
+                })
+                .catch(() => {
+                    ea.queue.send(
+                        ea.commands.CANVAS_URL,
+                        "0\v0\v0\v0\v"
+                    );
+                });
         }
     }
 });

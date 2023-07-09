@@ -97,6 +97,7 @@
                     });
                 }, 30000);
 
+                de.sync();
                 loadingCompleted.set(true);
             }
         );

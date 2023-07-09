@@ -8,12 +8,7 @@
 
     let ready = false;
     loadingCompleted.subscribe((v) => {
-        if (v) {
-            alert("done loading");
-            ready = true;
-        } else {
-            ready = false;
-        }
+        ready = v;
     });
 </script>
 

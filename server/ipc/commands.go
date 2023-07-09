@@ -40,6 +40,9 @@ const (
 	CLOSE_BOARD
 	// delete a board with the name X
 	DELETE_BOARD
+	// is the body length is 0, it is a get (either from disk or from admin)
+	// if the body legnth is nonzero, it is a set (either admin set or send out to another user)
+	CANVAS_URL
 )
 
 var currentWorkingDirectory string
@@ -168,6 +171,17 @@ func CreateBoard(name string) bool {
 		return false //something strange happened
 	}
 
+	//write canvas.txt (metadata\vbase64encodedURI)
+	cfile, err := os.OpenFile(fmt.Sprintf("%s/%s/canvas.png", currentWorkingDirectory, name), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return false
+	}
+	defer cfile.Close()
+	var canvastxt = "0\v0\v0\v0\v"
+	n, err = cfile.Write([]byte(canvastxt))
+	if n != len(canvastxt) || err != nil {
+		return false //something strange happened
+	}
 	return true
 }
 
@@ -178,3 +192,9 @@ func DeleteBoard(name string) bool {
 
 // OpenBoard is in db
 // func OpenBoard()
+
+func GetCanvas() string {
+	_, url := ipcSendAndWait(CANVAS_URL, "")
+	return url
+}
+

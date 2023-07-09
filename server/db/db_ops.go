@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 )
 
 func (dodb *DoDb) AddObject(obj string) (string, bool) {
@@ -104,4 +105,17 @@ func (dodb *DoDb) ApplyDiff(diff DbDiff) error {
 
 func (dodb *DoDb) GetConfig() *DbConfigFile {
 	return dodb.config
+}
+
+func (dodb *DoDb) SetCanvas(c string) {
+	os.WriteFile(fmt.Sprintf("%s/canvas.txt", dbdir),
+		[]byte(c), 0644)
+}
+
+func (dodb *DoDb) GetCanvas() string {
+	c, err := os.ReadFile(fmt.Sprintf("%s/canvas.txt", dbdir))
+	if err != nil {
+		return "0\v0\v0\v0\v"
+	}
+	return string(c)
 }

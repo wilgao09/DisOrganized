@@ -8,3 +8,18 @@
 2023/06/08 23:26:10 starting server
 2023/06/08 23:26:10 Spawning stdio listeners
 2023/06/08 23:26:10 server running on 11326
+2023/07/08 16:11:44 Plugins directory is set to C:\Users\theff\DisOrganized\plugins
+2023/07/08 16:11:44 starting server
+2023/07/08 16:11:44 Spawning stdio listeners
+2023/07/08 16:11:44 server running on 11326
+2023/07/08 16:11:44 server died!
+2023/07/08 16:12:32 Plugins directory is set to C:\Users\theff\DisOrganized\plugins
+2023/07/08 16:12:32 starting server
+2023/07/08 16:12:32 Spawning stdio listeners
+2023/07/08 16:12:32 server running on 11326
+2023/07/08 16:12:32 server died!
+2023/07/08 16:13:14 Plugins directory is set to C:\Users\theff\DisOrganized\plugins
+2023/07/08 16:13:14 starting server
+2023/07/08 16:13:14 Spawning stdio listeners
+2023/07/08 16:13:14 server running on 11326
+2023/07/08 16:13:14 server died!

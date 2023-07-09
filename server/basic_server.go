@@ -96,14 +96,15 @@ func main() {
 	server := gin.Default()
 
 	server.Use(cors.New(cors.Config{
-		AllowOrigins:  []string{"*"}, // TODO: can we do better?
-		AllowMethods:  []string{"GET"},
-		AllowHeaders:  []string{"Origin"},
-		ExposeHeaders: []string{"Content-Length"},
-		// AllowCredentials: true,
-		// AllowOriginFunc: func(origin string) bool {
-		// 	return origin == "https://github.com"
-		// },
+		// AllowOrigins:  []string{"*"}, // TODO: can we do better?
+		AllowMethods:     []string{"GET"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		AllowOriginFunc: func(origin string) bool {
+
+			return origin != "ALLOW_ALL_ORIGINS"
+		},
 		MaxAge: 12 * time.Hour,
 	}))
 
@@ -112,7 +113,7 @@ func main() {
 			"msg": "HELLO WORLD",
 		})
 	})
-
+	fmt.Println("??")
 	// server.GET("/api/retrieveFile")
 	// server.GET("/api/retrieveConfig")
 
@@ -159,6 +160,22 @@ func main() {
 	server.GET("/config", func(ctx *gin.Context) {
 		returnData := *(db.GetCurrentOpenBoard().GetConfig())
 		ctx.JSON(200, returnData)
+	})
+
+	server.GET("/canvas", func(ctx *gin.Context) {
+		// check that this request has an associated cookie
+		cookie, err := ctx.Cookie("isAccepted")
+		log.Printf("User with cookie %s is requesting for canvas\n", cookie)
+		if err != nil && wsutil.GetConnectionsStruct().UserDataOfCookie(cookie) == nil {
+			log.Printf("User with cookie %s was rejected\n", cookie)
+			ctx.JSON(403, nil)
+			return
+		}
+		log.Printf("User with cookie %s was allowed\n", cookie)
+		// ask admin for current board state
+		var b = ipcutil.GetCanvas()
+		// send
+		ctx.JSON(200, b)
 	})
 
 	log.Printf("Spawning stdio listeners\n")

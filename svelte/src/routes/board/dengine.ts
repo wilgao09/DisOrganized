@@ -2,7 +2,7 @@ import CanvasManager from "./canvasmanager";
 import type MultiplayerManager from "./multiplayer";
 import { WSMessageCode } from "./wsutil";
 
-const CURSOR_REFRESH = 66;
+const CURSOR_REFRESH = 10;
 const OPACITY = 0.5;
 
 /**
@@ -10,18 +10,10 @@ const OPACITY = 0.5;
  * Does this by interacting with a ctx
  */
 export default class DrawingEngine {
-    // private displayCtx: CanvasRenderingContext2D;
-    // private drawCtx: CanvasRenderingContext2D;
-
-    // private offScreenDrawCanvas: OffscreenCanvas;
-    // private offScreenDrawCtx: OffscreenCanvasRenderingContext2D;
-    // private offScreenDrawCanvasOriginDiff: [number, number];
-
     private svg: SVGSVGElement;
     private svgElements: Map<number, Element>;
     private svgMenus: Map<number, [string, () => void][]>;
 
-    // private userCursors: SVGSVGElement;
     private userCursorElements: Map<
         number,
         [SVGCircleElement, SVGRectElement, SVGTextElement]
@@ -511,6 +503,11 @@ export default class DrawingEngine {
         } else {
             return retrieved;
         }
+    }
+
+    // sync entire board with the server
+    public sync() {
+        this.cm.syncWithServer();
     }
 
     /**

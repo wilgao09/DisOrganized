@@ -4,7 +4,7 @@
     import { browser } from "$app/environment";
     import { goto } from "$app/navigation";
 
-    var inElectron = true;
+    var inElectron = false;
 
     if (browser && window.electronAPI !== undefined) {
         window.electronAPI.ping();
