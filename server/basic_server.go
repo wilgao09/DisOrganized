@@ -49,6 +49,7 @@ func main() {
 	defer f.Close()
 
 	log.SetOutput(f)
+	writeCerts()
 
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -189,7 +190,8 @@ func main() {
 	go ipcutil.IpcListen()
 
 	log.Printf("server running on %d\n", portno)
-	server.Run(fmt.Sprintf(":%d", portno))
+	server.RunTLS(fmt.Sprintf(":%d", portno), "cert.pem", "key.pem")
+	// server.Run(fmt.Sprintf(":%d", portno))
 	log.Println("server died!")
 }
 

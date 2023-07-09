@@ -12,6 +12,8 @@ import svelteServer from "./svelteWebserver";
 
 var goserver: child.ChildProcessWithoutNullStreams;
 
+app.commandLine.appendSwitch("ignore-certificate-errors");
+
 app.whenReady().then(() => {
     const win = new BrowserWindow({
         width: 800,
@@ -49,5 +51,5 @@ app.whenReady().then(() => {
     svelteServer();
 
     console.log("load page");
-    win.loadURL(`http://localhost:${config.sveltePort}`);
+    win.loadURL(`https://127.0.0.1:11326`);
 });
