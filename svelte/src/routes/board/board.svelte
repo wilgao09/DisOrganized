@@ -75,7 +75,10 @@
         // with a state variable
         window.boardSocket = wsutil.opensocket(
             wsurl,
-            wsutil.defaultMessageHandler(ph, de, mm),
+            wsutil.defaultMessageHandler(ph, de, mm, () => {
+                de.sync(mm.getUserData().cookie);
+                loadingCompleted.set(true);
+            }),
             () => {
                 window.boardSocket({
                     msgType:
@@ -96,9 +99,6 @@
                         msg: "",
                     });
                 }, 30000);
-
-                de.sync();
-                loadingCompleted.set(true);
             }
         );
         fetchPlugins(ph, ih, () => {

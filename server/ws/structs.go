@@ -146,7 +146,7 @@ func (ud *UserData) SetBrush(nb string) {
  *
  */
 func (ud *UserData) String() string {
-	return fmt.Sprintf("%d\v%d\v%s", ud.cookie, ud.id, ud.name)
+	return fmt.Sprintf("%s\v%d\v%s", ud.cookie, ud.id, ud.name)
 }
 
 // func (ud *UserData) OwnsConn(c *websocket.Conn) bool {

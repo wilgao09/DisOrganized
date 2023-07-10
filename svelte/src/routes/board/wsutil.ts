@@ -75,7 +75,8 @@ export function opensocket(
 export function defaultMessageHandler(
     pm: PluginManager,
     de: DrawingEngine,
-    mm: MultiplayerManager
+    mm: MultiplayerManager,
+    cookiecb: () => void
 ) {
     // require that the first message be a GET_MY_DATA message
     let gotData = false;
@@ -143,11 +144,16 @@ export function defaultMessageHandler(
                 break;
             case WSMessageCode.GET_MY_DATA:
                 data = m.msg.split("\v");
+                console.log("GOT DATA");
+                console.log(data);
                 mm.addSelf(
                     parseInt(data[1]),
                     data[0],
                     data[2]
                 );
+                if (!gotData) {
+                    cookiecb();
+                }
                 gotData = true;
                 break;
             case WSMessageCode.SET_BRUSH:

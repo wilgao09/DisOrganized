@@ -80,6 +80,7 @@ func listenws(c *websocket.Conn, uid int) {
 func EstablishConnection(w http.ResponseWriter, r *http.Request, name string) {
 	// TODO: pull the cookie setting code out and into the main server file
 	cookie := fmt.Sprintf("%d", rand.Uint64())
+
 	cookieObj := http.Cookie{
 		Name: "isAccepted", Value: cookie, Path: "/", HttpOnly: true,
 		SameSite: http.SameSiteNoneMode, Secure: true,
@@ -94,7 +95,7 @@ func EstablishConnection(w http.ResponseWriter, r *http.Request, name string) {
 	}
 	// returns an id and a cookie
 	uid := currconnections.AddConnection(conn, name, cookie)
-
+	log.Printf("Minted cookie %s for user %d\n", cookie, uid)
 	// alert all other users that a new user has joined
 	userdata, _ := GetConnectionsStruct().GetUserData()
 	for _, b := range userdata {

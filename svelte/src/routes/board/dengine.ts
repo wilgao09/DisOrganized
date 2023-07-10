@@ -506,8 +506,8 @@ export default class DrawingEngine {
     }
 
     // sync entire board with the server
-    public sync() {
-        this.cm.syncWithServer();
+    public sync(cookie: string) {
+        this.cm.syncWithServer(cookie);
     }
 
     /**
