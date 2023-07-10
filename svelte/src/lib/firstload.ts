@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
 
-export const loadingCompleted = writable(false);
+export const loadingCompleted = writable(true);
 // export const loadingProgress = writable(0);
 
 // let eps = 0.001;

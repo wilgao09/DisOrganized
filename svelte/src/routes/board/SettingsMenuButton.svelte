@@ -1,10 +1,9 @@
-<script>
-    import RightArrowIcon from "$lib/components/RightArrowIcon.svelte";
+<script lang="ts">
+    import ArrowIcon from "$lib/components/ArrowIcon.svelte";
 
-    /**
-     * @type {string}
-     */
-    export let name;
+    export let name: string;
+
+    export let dir: string;
 </script>
 
 <button class="settings-tile" on:click>
@@ -13,7 +12,7 @@
     </div>
 
     <div class="arrow-container">
-        <RightArrowIcon />
+        <ArrowIcon {dir} />
     </div>
 </button>
 
@@ -33,15 +32,20 @@
         outline: none;
         text-align: left;
 
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: 80% 20%;
+        /* column-gap: 10%; */
+        /* flex-direction: row;
+        justify-content: space-between; */
     }
 
     .arrow-container {
         display: block;
-        /* height: 100%; */
-        width: 30%;
+        margin-top: auto;
+        margin-bottom: auto;
+        /* margin-right: auto; */
+        /* height: 10%; */
+        /* width: 10%; */
     }
 
     .name-container {

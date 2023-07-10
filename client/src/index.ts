@@ -51,5 +51,5 @@ app.whenReady().then(() => {
     svelteServer();
 
     console.log("load page");
-    win.loadURL(`https://127.0.0.1:11326`);
+    win.loadURL(`http://127.0.0.1:11326`);
 });

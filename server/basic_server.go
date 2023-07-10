@@ -49,7 +49,6 @@ func main() {
 	defer f.Close()
 
 	log.SetOutput(f)
-	writeCerts()
 
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -163,14 +162,14 @@ func main() {
 
 	server.GET("/canvas", func(ctx *gin.Context) {
 		// check that this request has an associated cookie
-		cookie, err := ctx.Cookie("isAccepted")
-		log.Printf("User with cookie %s is requesting for canvas\n", cookie)
-		if err != nil && wsutil.GetConnectionsStruct().UserDataOfCookie(cookie) == nil {
-			log.Printf("User with cookie %s was rejected\n", cookie)
-			ctx.JSON(403, nil)
-			return
-		}
-		log.Printf("User with cookie %s was allowed\n", cookie)
+		// cookie, err := ctx.Cookie("isAccepted")
+		// log.Printf("User with cookie %s is requesting for canvas\n", cookie)
+		// if err != nil && wsutil.GetConnectionsStruct().UserDataOfCookie(cookie) == nil {
+		// 	log.Printf("User with cookie %s was rejected\n", cookie)
+		// 	ctx.JSON(403, nil)
+		// 	return
+		// }
+		// log.Printf("User with cookie %s was allowed\n", cookie)
 		// ask admin for current board state
 		var b = ipcutil.GetCanvas()
 		// send
@@ -190,8 +189,8 @@ func main() {
 	go ipcutil.IpcListen()
 
 	log.Printf("server running on %d\n", portno)
-	server.RunTLS(fmt.Sprintf(":%d", portno), "cert.pem", "key.pem")
-	// server.Run(fmt.Sprintf(":%d", portno))
+	// server.RunTLS(fmt.Sprintf(":%d", portno), "cert.pem", "key.pem")
+	server.Run(fmt.Sprintf(":%d", portno))
 	log.Println("server died!")
 }
 

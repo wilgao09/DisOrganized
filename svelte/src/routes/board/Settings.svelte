@@ -1,4 +1,5 @@
 <script lang="ts">
+    import defocus from "$lib/defocus";
     import SettingsMenu from "./SettingsMenu.svelte";
     import type MultiplayerManager from "./multiplayer";
 
@@ -16,7 +17,13 @@
 </button>
 
 {#if menuOpened}
-    <div class="menu-container">
+    <div
+        class="menu-container"
+        use:defocus
+        on:defocus={() => {
+            menuOpened = false;
+        }}
+    >
         <SettingsMenu
             closeFunction={() => (menuOpened = false)}
             {mm}

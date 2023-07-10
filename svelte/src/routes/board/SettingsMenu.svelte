@@ -1,4 +1,5 @@
 <script lang="ts">
+    import ArrowBackButton from "$lib/components/ArrowBackButton.svelte";
     import SettingsMenuButton from "./SettingsMenuButton.svelte";
     import UsersList from "./UsersList.svelte";
     import type MultiplayerManager from "./multiplayer";
@@ -16,21 +17,25 @@
 
 {#if currentPage == "settings"}
     <div class="settings-container">
-        <SettingsMenuButton
-            name="Return to board"
-            on:click={() => {
-                closeFunction();
-            }}
-        />
-        <SettingsMenuButton
-            name="Users List"
-            on:click={() => {
-                currentPage = "users";
-            }}
-        />
+        <ArrowBackButton back={closeFunction} />
+
+        <div class="settings">
+            <SettingsMenuButton
+                name="Users List"
+                dir="right"
+                on:click={() => {
+                    currentPage = "users";
+                }}
+            />
+        </div>
     </div>
 {:else if currentPage == "users"}
-    <UsersList {mm} />
+    <UsersList
+        {mm}
+        back={() => {
+            currentPage = "settings";
+        }}
+    />
 {:else}
     <div>shit fuck</div>
 {/if}
@@ -39,9 +44,12 @@
     .settings-container {
         height: 100%;
         width: 100%;
+        /* padding: 8%; */
+    }
+    .settings {
+        padding: 8%;
         display: flex;
         flex-direction: column;
         background-color: var(--background-2);
-        padding: 8%;
     }
 </style>

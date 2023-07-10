@@ -1,4 +1,5 @@
 <script lang="ts">
+    import ContextMenu from "$lib/components/ContextMenu.svelte";
     import type DrawingEngine from "./dengine";
 
     export let id: number;
@@ -13,22 +14,4 @@
     console.log(options);
 </script>
 
-<div class="select-menu" style={`top:${y}px;left:${x}px`}>
-    {#each options as option}
-        <button
-            class="do-button do-bwhite"
-            on:click={() => {
-                option[1]();
-            }}>{option[0]}</button
-        >
-    {/each}
-</div>
-
-<style>
-    .select-menu {
-        position: absolute;
-        display: flex;
-        flex-direction: column;
-        /* background-color: lime; */
-    }
-</style>
+<ContextMenu {x} {y} {options} />

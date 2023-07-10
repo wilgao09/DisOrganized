@@ -63,6 +63,12 @@ declare global {
         menu: [string, () => void][];
         onmount: (() => void)[];
     }
+
+    declare namespace svelte.JSX {
+        interface HTMLAttributes<T> {
+            ondefocus: () => void;
+        }
+    }
 }
 
 window.electronAPI = window.electronAPI || {};
