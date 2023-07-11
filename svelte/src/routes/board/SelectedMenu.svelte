@@ -6,6 +6,7 @@
     export let de: DrawingEngine;
     export let x: number;
     export let y: number;
+    export let visible: boolean;
 
     let options: Readonly<[string, () => void][]>;
 
@@ -14,4 +15,10 @@
     console.log(options);
 </script>
 
-<ContextMenu {x} {y} {options} />
+<ContextMenu
+    {x}
+    {y}
+    {options}
+    {visible}
+    defocuscb={() => {}}
+/>

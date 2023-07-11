@@ -93,7 +93,9 @@ export default class DrawingEngine {
     }
 
     private checkCursorBubbleRefresh() {
+        let checked = new Set<number>();
         for (let [k, v] of this.mm.getAllUserData()) {
+            checked.add(k);
             // do nothing if the current user is us
             if (k === this.mm.getUserData().id) {
                 continue;
@@ -137,6 +139,14 @@ export default class DrawingEngine {
                 v.x,
                 v.y
             );
+        }
+        for (let [loadedCursorIds, [e1, e2, e3]] of this
+            .userCursorElements) {
+            if (!checked.has(loadedCursorIds)) {
+                e1.parentElement?.removeChild(e1);
+                e2.parentElement?.removeChild(e2);
+                e3.parentElement?.removeChild(e3);
+            }
         }
     }
 

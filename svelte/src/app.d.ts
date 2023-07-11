@@ -38,6 +38,7 @@ declare global {
                     url: string;
                 }>
             ) => void;
+            kickUser: (uid: number) => void;
         };
         boardSocket: (msg: SocketMessage) => void;
     }

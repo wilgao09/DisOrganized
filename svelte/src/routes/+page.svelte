@@ -1,12 +1,12 @@
 <script>
     import Banner from "./Banner.svelte";
 
-    import { browser } from "$app/environment";
     import { goto } from "$app/navigation";
+    import { isAdmin } from "$lib/isadmin";
 
     var inElectron = false;
 
-    if (browser && window.electronAPI !== undefined) {
+    if (isAdmin()) {
         window.electronAPI.ping();
         inElectron = true;
     }

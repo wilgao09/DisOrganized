@@ -1,5 +1,8 @@
 <script lang="ts">
     import ArrowBackButton from "$lib/components/ArrowBackButton.svelte";
+    import ContextMenu from "$lib/components/ContextMenu.svelte";
+    import defocus from "$lib/defocus";
+    import { isAdmin } from "$lib/isadmin";
     import type MultiplayerManager from "./multiplayer";
 
     export let mm: MultiplayerManager;
@@ -23,30 +26,78 @@
         });
         users = t;
     });
+
+    let ulistel: HTMLDivElement;
+    let menuX = 0;
+    let menuY = 0;
+    let menuId = 0;
+    let showMenu = false;
+    function spawnContextMenu(
+        x: number,
+        y: number,
+        uid: number
+    ) {
+        menuX = x;
+        menuY = y;
+        menuId = uid;
+        showMenu = true;
+    }
 </script>
 
-<div>
+<div bind:this={ulistel}>
     <ArrowBackButton {back} />
-    <div class="users-grid">
+    <div>
         {#each users as u}
-            <div>
-                {`${u[0]}`}
-            </div>
-            <div>
-                <div
-                    style={`background-color:${u[1]}`}
-                    class="colored-square"
-                />
-            </div>
-            <div>
-                {`${u[2]}`}
+            <div
+                class="user-grid"
+                on:contextmenu={(e) => {
+                    if (isAdmin()) {
+                        e.preventDefault();
+                        spawnContextMenu(
+                            e.clientX,
+                            e.clientY,
+                            u[0]
+                        );
+                        return false;
+                    }
+                    return true;
+                }}
+            >
+                <div>
+                    {`${u[0]}`}
+                </div>
+                <div>
+                    <div
+                        style={`background-color:${u[1]}`}
+                        class="colored-square"
+                    />
+                </div>
+                <div style="overflow-x:auto">
+                    {`${u[2]}`}
+                </div>
             </div>
         {/each}
     </div>
 </div>
+<ContextMenu
+    x={menuX}
+    y={menuY}
+    options={[
+        [
+            "Kick",
+            () => {
+                window.electronAPI.kickUser(menuId);
+            },
+        ],
+    ]}
+    defocuscb={() => {
+        showMenu = false;
+    }}
+    visible={showMenu}
+/>
 
 <style>
-    .users-grid {
+    .user-grid {
         display: grid;
         grid-template-columns: 10% 3ch 50%;
         column-gap: 9% 9%;

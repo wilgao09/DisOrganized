@@ -16,6 +16,7 @@ const ea = {
         CLOSE_BOARD: 7,
         DELETE_BOARD: 8,
         CANVAS_URL: 9,
+        KICK_USER: 10,
     },
     fns: {
         encode: (cmd, str = "") =>
@@ -31,6 +32,9 @@ const ea = {
         currcb: () => {},
         q: [],
         send: (cmd, str, sendprom = false) => {
+            console.log(
+                `ADD TO THE IPC SEND QUEUE: ${cmd}: ${str}`
+            );
             let cb = () => {};
             let tor = sendprom
                 ? new Promise((resolve, reject) => {
@@ -162,6 +166,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
     setGetLocalCanvasURL: (cb) => {
         getLocalCanvasURL = cb;
+    },
+
+    kickUser: (uid) => {
+        ea.queue.send(ea.commands.KICK_USER, `${uid}`);
     },
 });
 

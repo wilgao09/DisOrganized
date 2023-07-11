@@ -508,7 +508,6 @@ export default class CanvasManager {
 
     // ask for the latest board from the server
     public syncWithServer(cookie: string) {
-        alert(`sending with cookie <${cookie}>`);
         fetch(
             `http://${get(destIp)}:${get(destPort)}/canvas`,
             {

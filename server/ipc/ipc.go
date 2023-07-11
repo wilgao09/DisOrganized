@@ -6,10 +6,12 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 	db "williamgao09/disorganized/db"
+	wsutil "williamgao09/disorganized/ws"
 )
 
 var IPCStatus = struct {
@@ -113,7 +115,16 @@ func IpcListen() {
 				db.GetCurrentOpenBoard().SetCanvas(bod)
 				// possible that this call was a result of someone asking
 			}
+		case KICK_USER:
+			v, err := strconv.Atoi(bod)
+			if err != nil {
+				log.Printf("Failed to atoi %s: %s\n", bod, err)
+				goto next
+			}
 
+			log.Printf("Removing user with id %d\n", v)
+			wsutil.RemoveUser(v)
+			goto next
 		default:
 			log.Printf("Unrecognized command %d", cmd)
 		}
@@ -167,7 +178,7 @@ func ipcSendAndWait(c IPCCommand, s string) (IPCCommand, string) { // to be call
 
 func ipcSend(c IPCCommand, s string) {
 	IPCStatus.lock.Lock()
-	log.Println("ipcsending")
+	log.Printf("ipcsending: %s\n", s)
 	fmt.Fprintf(os.Stdout, "%c%s\n", rune(c+32), s)
 	// writer := bufio.NewWriter(os.Stdout)
 	// s = fmt.Sprintf("%c%s\n", rune(c+32), s)

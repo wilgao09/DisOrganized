@@ -43,6 +43,8 @@ const (
 	// is the body length is 0, it is a get (either from disk or from admin)
 	// if the body legnth is nonzero, it is a set (either admin set or send out to another user)
 	CANVAS_URL
+	// remove a user by their id
+	KICK_USER
 )
 
 var currentWorkingDirectory string
@@ -197,4 +199,3 @@ func GetCanvas() string {
 	_, url := ipcSendAndWait(CANVAS_URL, "")
 	return url
 }
-

@@ -222,8 +222,13 @@
 </div>
 <Settings {mm} />
 <Toolbar pluginManager={ph} />
-{#if !Number.isNaN(selectData.id) && de !== undefined}
-    <SelectedMenu {...selectData} {de} />
+<!-- TODO: fix this -->
+{#if de !== undefined}
+    <SelectedMenu
+        {...selectData}
+        {de}
+        visible={!Number.isNaN(selectData.id)}
+    />
 {/if}
 
 <!--  -->

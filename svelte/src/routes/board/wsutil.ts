@@ -1,3 +1,4 @@
+import { AlertType, addAlert } from "$lib/alerts";
 import type DrawingEngine from "./dengine";
 import type MultiplayerManager from "./multiplayer";
 import type PluginManager from "./plugins";
@@ -59,6 +60,12 @@ export function opensocket(
     };
     ws.onopen = () => {
         oncomplete();
+    };
+    ws.onclose = () => {
+        addAlert({
+            type: AlertType.ERROR,
+            msg: "You have been disconnected from the server",
+        });
     };
     return (nmsg: SocketMessage) => {
         let s =

@@ -34,17 +34,7 @@ func Init() {
 func listenws(c *websocket.Conn, uid int) {
 	c.SetCloseHandler(func(code int, text string) error {
 		// TODO: make use of the parameters
-
-		// delete the user from the dictionary of users
-		delete(currconnections.conn_dict, uid)
-		// notify all clients to delete the user
-		for k, v := range currconnections.conn_dict {
-			if k != uid {
-				WriteMessageToUserDataStruct(
-					v, 5, fmt.Sprintf("%d", uid),
-				)
-			}
-		}
+		RemoveUser(uid)
 		return nil
 	})
 
@@ -109,4 +99,21 @@ func EstablishConnection(w http.ResponseWriter, r *http.Request, name string) {
 	}
 
 	listenws(conn, uid)
+}
+
+func RemoveUser(uid int) {
+	currconnections := GetConnectionsStruct()
+	// check if the ws is closed
+	currconnections.conn_dict[uid].conn.Close()
+	// delete the user from the dictionary of users
+	delete(currconnections.conn_dict, uid)
+	// notify all clients to delete the user
+	for k, v := range currconnections.conn_dict {
+		if k != uid {
+			// verify that this is DELETE_USER
+			WriteMessageToUserDataStruct(
+				v, 6, fmt.Sprintf("%d", uid),
+			)
+		}
+	}
 }
