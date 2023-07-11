@@ -26,8 +26,7 @@ del %SCRIPT%'''
 DELETE_ALL_TS = "del /S *.ts && del /S *.tsx"
 
 
-def build():
-    print("You should be in the top level directory of DisOrganized")
+def build_windows():
 
     debug("clean build")
     cmd("rmdir /s /q build")
@@ -47,7 +46,35 @@ def build():
     debug("build client")
     cmd("cd build  &&  npm run make && cd .. ")
 
-    # windows only
+
+def build_posix():
+    debug("clean build")
+    cmd("rmdir --ignore-fail-on-non-empty ./build")
+
+    debug("build server")
+    cmd("cd ./server && go mod tidy && go build -o ../client/rsrc/server.exe && cd ..")
+
+    debug("build svelte")
+    cmd("cd ./svelte && npm run build && cp -r -f /i build/ ../client/rsrc/svelte && cd ..")
+
+    debug("compile ts to js")
+    # windows specific
+    # cmd("cd client && xcopy src dist /E /y && tsc && cd dist && {} && cd ../..".format(DELETE_ALL_TS))
+    cmd("cp -r -f client build ")
+    cmd("cd ./build && tsc && cd ./src && rm -r *.ts && rm -r *.tsx && cd../..")
+
+    debug("build client")
+    cmd("cd ./build  &&  npm run make && cd .. ")
+
+
+def build():
+    print("You should be in the top level directory of DisOrganized")
+    if (os.name == "nt"):
+        build_windows()
+    elif (os.name == "posix"):
+        build_posix()
+    else:
+        print("Cannot build for non-window, non-posix")
 
 
 build()
