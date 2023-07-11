@@ -1,10 +1,19 @@
 # DisOrganized
 
+A whiteboard/diagramming tool hybrid.
+
+## Features
+
+-   Privacy (whiteboards aren't stored on a cloud, but rather run out of your machine)
+-   Multiplayer support
+-   Flexible plugin API
+
 ## Building
 
-This project currently only supports Windows. To build this project, run `built.bat` in cmd. It is expected that you have the following:
+Build this project by running `python build.py`. It is expected that you have the following installed:
 
--   npm/node
 -   go
+-   node/npm
+-   tsc
 
-When the project is built, a shortcut titled `DisOrganized.lnk` will appear in the top level directory
+After building, the executable can be found in `build/out/client-win32-x64` or your platform equivalent.

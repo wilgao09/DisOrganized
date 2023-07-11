@@ -7,7 +7,6 @@
     var inElectron = false;
 
     if (isAdmin()) {
-        window.electronAPI.ping();
         inElectron = true;
     }
 </script>

@@ -1,6 +1,10 @@
+/**
+ * Run in the BrowserWindow
+ * Note that anything declared in here is not globally available
+ * in the BrowserWindow unless explicitly exposeInMainWorld
+ */
 const { contextBridge, ipcRenderer } = require("electron");
 
-const chan = "PrivilegedMessage";
 // this is ported into the global space, but should be
 // hidden from teh svelte stuff
 const ea = {
@@ -31,6 +35,8 @@ const ea = {
         curcmd: -1,
         currcb: () => {},
         q: [],
+        // TODO: there is black magic that does not work here
+        // see github issue #1
         send: (cmd, str, sendprom = false) => {
             console.log(
                 `ADD TO THE IPC SEND QUEUE: ${cmd}: ${str}`
@@ -72,7 +78,7 @@ const ea = {
                 ea.queue.q.shift();
             console.log("sending");
             ipcRenderer.send(
-                chan,
+                ea.chan,
                 ea.fns.encode(ea.queue.curcmd, b)
             );
             // if theres no need to wait for this to finish
@@ -85,6 +91,8 @@ const ea = {
     },
 };
 
+// local copy of the getLocalCanvas function
+// this gets overwritten by calls to setGetLocalCanvas
 let getLocalCanvasURL = () => {
     return {
         negX: 0,
@@ -95,8 +103,10 @@ let getLocalCanvasURL = () => {
     };
 };
 
+// exposes the electronAPI object
+// electronAPI serves as the admin controls
+// see svelte/src/app.d.ts for documentation
 contextBridge.exposeInMainWorld("electronAPI", {
-    ping: () => ipcRenderer.send("myelectronping"),
     getAvailableBoards: () => {
         return ea.queue
             .send(ea.commands.AVAILABLE_BOARDS, "", true)
@@ -180,7 +190,7 @@ ipcRenderer.on("myelectronpong", (ev, msg) => {
     console.log(msg);
 });
 
-ipcRenderer.on(chan, (ev, msg) => {
+ipcRenderer.on(ea.chan, (ev, msg) => {
     let cmd, bod;
     msg = new TextDecoder().decode(msg);
     console.log(msg);

@@ -1,3 +1,7 @@
+/**
+ * Entry file into the electron app
+ */
+
 import { app, BrowserWindow, ipcMain } from "electron";
 import child from "child_process";
 
@@ -6,12 +10,11 @@ import path from "path";
 
 config.resourcePath =
     __dirname + "/../" + config.resourcePath;
-process.env.HOST = "localhost";
-process.env.PORT = "" + config.sveltePort;
 import svelteServer from "./svelteWebserver";
 
 var goserver: child.ChildProcessWithoutNullStreams;
 
+// allow http connections in the BrowserWindow
 app.commandLine.appendSwitch("ignore-certificate-errors");
 
 app.whenReady().then(() => {
@@ -24,17 +27,14 @@ app.whenReady().then(() => {
         },
     });
 
-    ipcMain.on("myelectronping", (e) => {
-        console.log("myelectronpong");
-        win.webContents.send("myelectronpong", "UWU OWO");
-    });
-
     goserver = child.spawn(
         `${config.resourcePath}/server.exe`,
         {
             stdio: ["pipe", "pipe", "pipe"],
         }
     );
+    // any messages that the electron thread gets should be forwarded
+    // either to the server or the admin
     goserver.stdout.on("data", (c) => {
         // forward it to admin
         console.log("pass to admin");
