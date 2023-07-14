@@ -83,6 +83,12 @@ declare global {
              */
             kickUser: (uid: number) => void;
         };
+
+        pluginAPI: {
+            createDeepCopy: (original: Readonly<{}>) => {};
+            sendDelta: (modified: {}) => void;
+            sendNew: (newObj: {}) => void;
+        };
         //
         /**
          * Send a message to the server over the websocket. All users have access to their own websocket
@@ -126,7 +132,10 @@ declare global {
          * @param a an object from a plugin
          * @returns nothing
          */
-        JSONtoSVG: (a: Object) => void;
+        JSONtoSVG: (
+            a: SVGJSON,
+            original: Readonly<any>
+        ) => void;
         /**
          * Send a pause signal to a plugin. The plugin can emit an object
          * from pausing.
@@ -152,5 +161,5 @@ declare global {
 }
 
 window.electronAPI = window.electronAPI || {};
-
+window.pluginAPI = window.pluginAPI || {};
 export {};

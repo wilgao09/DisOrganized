@@ -111,6 +111,7 @@ export function defaultMessageHandler(
                 }
                 break;
             case WSMessageCode.CREATE:
+            case WSMessageCode.DELTA:
                 // de.drawSVGJSON(JSON.parse(m.msg));
                 de.drawSVGJSON(
                     pm.JSONToSVG(JSON.parse(m.msg))

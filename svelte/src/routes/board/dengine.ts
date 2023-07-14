@@ -345,6 +345,13 @@ export default class DrawingEngine {
     }
 
     public drawSVGJSON(o: SVGJSON) {
+        // if the id is already taken, delete it
+        // TODO: is this dangerous?
+        // this used by delta and create
+        if (this.svgMenus.get(o.id) !== undefined) {
+            this.removeById(o.id);
+        }
+
         let k: Element; // TODO: wtf is this
         k = document.createElementNS(
             DrawingEngine.svgns,
@@ -364,6 +371,7 @@ export default class DrawingEngine {
             }
             k.setAttribute(key, val);
         }
+
         this.svgMenus.set(o.id, o.menu);
         this.addSVG(o.id, k, o.onmount);
     }

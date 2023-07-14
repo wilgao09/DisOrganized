@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -69,6 +70,31 @@ func setUpWSHandlers() {
 	})
 
 	//TODO: DELTA
+	connstruct.AddHandler(DELTA, func(c *websocket.Conn, i int, s string) {
+		var idstruct struct {
+			ID int `json:"id"`
+		}
+		err := json.Unmarshal([]byte(s), &idstruct)
+		if err != nil {
+			log.Printf("Failed to get id in delta: %s\n", err)
+			// TODO: what do we do on the client side?
+			wsutil.WriteMessageToUserConn(c, 127, "Failed to delta")
+			return
+		}
+		err = db.GetCurrentOpenBoard().ApplyDiff((db.DbDiff{
+			Dtype:   db.DT_UPDATE,
+			Id:      idstruct.ID,
+			Content: s,
+		}))
+		if err != nil {
+			log.Printf("Failed to delta: %s\n", err)
+			// TODO: what do we do on the client side?
+			wsutil.WriteMessageToUserConn(c, 127, "Failed to delta")
+			return
+		}
+
+		connstruct.SendToAll(DELTA, s, []int{})
+	})
 
 	connstruct.AddHandler(DELETE, func(c *websocket.Conn, i int, s string) {
 		id, err := strconv.Atoi(s)
@@ -82,10 +108,7 @@ func setUpWSHandlers() {
 			Id:      id,
 			Content: "",
 		})); err == nil {
-			userdata, _ := connstruct.GetUserData()
-			for _, udata := range userdata {
-				wsutil.WriteMessageToUserDataStruct(udata, DELETE, s)
-			}
+			connstruct.SendToAll(DELETE, s, []int{})
 		} else {
 			wsutil.WriteMessageToUserConn(c, 127, "Failed to delete")
 		}

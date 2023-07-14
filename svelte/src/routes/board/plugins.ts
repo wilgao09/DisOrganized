@@ -134,6 +134,7 @@ export default class PluginManager {
      * @param o some json object
      */
     public JSONToSVG(o: any) {
+        let rocopy = window.pluginAPI.createDeepCopy(o);
         if (o === undefined) return; //wtf?
         o.menu = [];
         o.onmount = [];
@@ -142,7 +143,7 @@ export default class PluginManager {
                 this.fnorder[i] !== undefined &&
                 this.fnorder[i].JSONtoSVG !== undefined
             ) {
-                this.fnorder[i].JSONtoSVG(o);
+                this.fnorder[i].JSONtoSVG(o, rocopy);
             }
         }
         o.menu.push([

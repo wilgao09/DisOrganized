@@ -1,4 +1,5 @@
 <script lang="ts">
+    import writePluginAPI from "./pluginapi";
     import PluginManger from "./plugins";
     import InputManager from "./inputs";
     import DrawingEngine from "./dengine";
@@ -73,6 +74,7 @@
 
         // TODO: replace all instances of window.boardsocket
         // with a state variable
+        writePluginAPI();
         window.boardSocket = wsutil.opensocket(
             wsurl,
             wsutil.defaultMessageHandler(ph, de, mm, () => {
@@ -101,6 +103,7 @@
                 }, 30000);
             }
         );
+
         fetchPlugins(ph, ih, () => {
             console.log("done fetching");
         });

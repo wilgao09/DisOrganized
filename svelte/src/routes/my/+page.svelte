@@ -6,9 +6,6 @@
     import SmallColumnBanner from "$lib/components/SmallColumnBanner.svelte";
     import GenericModal from "./GenericModal.svelte";
     import { addAlert, AlertType } from "$lib/alerts";
-    if (browser && window.electronAPI !== undefined) {
-        window.electronAPI.ping();
-    }
 
     /**
      * @type {HTMLDivElement}
