@@ -6,6 +6,13 @@ declare global {
             ) => any;
             sendDelta: (modified: any) => void;
             sendNew: (newObj: any) => void;
+            openToEvents: (
+                id: number,
+                handlers: InputHandling.Handlers
+            ) => void;
+            elementOfId: (
+                id: number
+            ) => SVGGraphicsElement | null;
         };
     }
     interface PluginFn {
@@ -57,6 +64,44 @@ declare global {
         menu: [string, () => void][];
         onmount: (() => void)[];
         [key: string]: any;
+    }
+    namespace InputHandling {
+        enum InputEventType {
+            MOUSE = "mouse",
+            PEN = "pen",
+            TOUCH = "touch",
+            KEY = "key",
+        }
+        enum UserActions {
+            SELECT = "select",
+            DRAW = "draw",
+            PAN = "pan",
+            TYPE = "type", // TODO: ???
+            NONE = "none", // NONE is used to represent null
+        }
+        interface InputEvent {
+            type: InputEventType;
+            action: UserActions;
+            value: string;
+            target: Element;
+            /**
+             * A number denoting how hard the user is pressing.
+             * Unlike normal pressure values, this will be -1
+             * when the user releases the device
+             */
+            lift: number;
+            x: number;
+            y: number;
+        }
+        interface Handlers {
+            // onPointerDown?: (ev: InputEvent) => void;
+            // onPointerMove?: (ev: InputEvent) => void;
+            // onPointerUp?: (ev: InputEvent) => void;
+            // onKeyDown?: (ev: InputEvent) => void;
+            // onKeyUp?: (ev: InputEvent) => void;
+            onAny?: (ev: InputEvent) => void;
+            onEnd?: (ev: InputEvent) => void;
+        }
     }
 }
 

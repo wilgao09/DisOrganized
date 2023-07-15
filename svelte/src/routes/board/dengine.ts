@@ -11,6 +11,7 @@ const OPACITY = 0.5;
  */
 export default class DrawingEngine {
     private svg: SVGSVGElement;
+    // TODO: turn this into a svggraphicselement
     private svgElements: Map<number, Element>;
     private svgMenus: Map<number, [string, () => void][]>;
 
@@ -416,8 +417,7 @@ export default class DrawingEngine {
     }
 
     /**
-     * Pan the screen from x0, y0 to x,y. All parameters are in
-     * screen pixels
+     * Pan the screen from x0, y0 to x,y. This function conerns itself
      * @param x0
      * @param y0
      * @param x

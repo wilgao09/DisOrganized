@@ -59,6 +59,78 @@ class Rect implements PluginFn {
                     window.pluginAPI.sendDelta(nobj);
                 },
             ]);
+            a.menu.push([
+                "Move",
+                () => {
+                    let el = window.pluginAPI.elementOfId(
+                        a.id
+                    );
+                    if (el === null) return;
+                    let rect = el as SVGRectElement;
+                    let origLocation: {
+                        x: number;
+                        y: number;
+                    } = el.getBBox();
+                    let cumDelta = { x: 0, y: 0 };
+                    let last = { x: 0, y: 0 };
+                    let wasUp = true;
+
+                    window.pluginAPI.openToEvents(a.id, {
+                        onAny: (ev) => {
+                            if (
+                                ev.type !==
+                                InputHandling.InputEventType
+                                    .KEY
+                            ) {
+                                if (ev.lift > 0 && wasUp) {
+                                    last = ev;
+                                    wasUp = false;
+                                } else if (ev.lift > 0) {
+                                    cumDelta.x +=
+                                        ev.x - last.x;
+                                    cumDelta.y +=
+                                        ev.y - last.y;
+                                    last = ev;
+                                    rect.setAttributeNS(
+                                        null,
+                                        "x",
+                                        `${
+                                            origLocation.x +
+                                            cumDelta.x
+                                        }`
+                                    );
+                                    rect.setAttributeNS(
+                                        null,
+                                        "y",
+                                        `${
+                                            origLocation.y +
+                                            cumDelta.y
+                                        }`
+                                    );
+                                } else {
+                                    wasUp = true;
+                                }
+                            }
+                        },
+                        onEnd: (ev) => {
+                            console.log("move end");
+                            let nobj =
+                                window.pluginAPI.createDeepCopy(
+                                    original
+                                );
+                            //modify as needed
+                            nobj.x =
+                                origLocation.x + cumDelta.x;
+                            nobj.y =
+                                origLocation.y + cumDelta.y;
+                            //send back
+                            window.pluginAPI.sendDelta(
+                                nobj
+                            );
+                        },
+                    });
+                },
+            ]);
         }
     }
 

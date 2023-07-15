@@ -1,3 +1,4 @@
+import { onMount } from "svelte";
 enum UserInputs {
     PEN_TAP,
     PEN_DRAG,
@@ -7,11 +8,18 @@ enum UserInputs {
     MOUSE_DRAG,
 }
 
+enum InputEventType {
+    MOUSE = "mouse",
+    PEN = "pen",
+    TOUCH = "touch",
+    KEY = "key",
+}
 enum UserActions {
-    SELECT,
-    DRAW,
-    PAN,
-    NONE, // NONE is used to represent null
+    SELECT = "select",
+    DRAW = "draw",
+    PAN = "pan",
+    TYPE = "type", // TODO: ???
+    NONE = "none", // NONE is used to represent null
 }
 
 const userBrushFieldsStr = ["strokeStyle"] as const;
@@ -27,8 +35,15 @@ const defaultBrush = {
     lineWidth: 5,
 };
 
+function loadEnums() {
+    window.InputHandling = {
+        InputEventType,
+        UserActions,
+    };
+}
+
 export {
-    UserActions,
+    loadEnums,
     UserInputs,
     type UserBrush,
     userBrushFieldsNum,

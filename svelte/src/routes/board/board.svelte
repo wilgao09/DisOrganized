@@ -5,7 +5,7 @@
     import DrawingEngine from "./dengine";
     import * as wsutil from "./wsutil";
     import fetchPlugins from "./pluginfetch";
-    import { UserInputs, UserActions } from "./usertypes";
+    import { loadEnums } from "./usertypes";
     import { declName, destIp, destPort } from "$lib/dest";
     import { get } from "svelte/store";
     import { onMount } from "svelte";
@@ -15,15 +15,15 @@
     import SelectedMenu from "./SelectedMenu.svelte";
     import { loadingCompleted } from "$lib/firstload";
     // import DrawingEngine from "./dengine";
-
     let wsurl = `ws://${encodeURIComponent(
         get(destIp)
     )}:${encodeURIComponent(
         get(destPort)
     )}/connectws/${encodeURIComponent(get(declName))}`;
-    let ph = new PluginManger();
-    let ih = new InputManager();
-    let mm = new MultiplayerManager();
+    let de: DrawingEngine;
+    let ph: PluginManger = new PluginManger();
+    let ih: InputManager;
+    let mm: MultiplayerManager = new MultiplayerManager();
 
     /**
      * @type {SVGSVGElement}
@@ -38,17 +38,79 @@
      */
     let icanvasel: HTMLCanvasElement;
     let dcanvasel: HTMLCanvasElement;
-    /**
-     * @type {DrawingEngine}
-     */
-    let de: DrawingEngine;
+
     let boardFrame: Element;
+    function anyHandler(ev: InputHandling.InputEvent) {
+        if (ev.type === InputHandling.InputEventType.KEY) {
+            if (ev.lift < 0) {
+                console.log("up");
+                for (let f of ih.getFns(ev.value)) {
+                    ph.deactivateAndCommit(f);
+                }
+            }
+            if (ev.lift > 0) {
+                console.log("down");
+                // TODO: here
+                for (let f of ih.getFns(ev.value))
+                    ph.activateFn(f);
+            }
+        } else {
+            de.trySendPosition(ev.x, ev.y);
+            if (
+                // ih.currAction() ==
+                //     InputHandling.UserActions.DRAW &&
+                ev.lift === -1
+            ) {
+                console.log("PAUSE");
+                // pause drawing
+                de.endDraw();
+                let objs = ph.pauseAll(ev);
+                for (let k of objs) {
+                    ph.commitObject(k);
+                }
+            }
+            switch (ev.action) {
+                case InputHandling.UserActions.PAN:
+                    de.endDraw();
+                    de.pan(
+                        ih.previousPoint().x,
+                        ih.previousPoint().y,
+                        ih.currentPoint().x,
+                        ih.currentPoint().y
+                    );
+                    break;
+                case InputHandling.UserActions.DRAW:
+                    de.draw(ev.x, ev.y);
+                    ph.offer(ev);
+                    break;
+                case InputHandling.UserActions.SELECT:
+                    de.endDraw();
+                    let newData = {
+                        x: 0,
+                        y: 0,
+                        id: -1,
+                    };
+
+                    newData.id = parseInt(ev.target.id);
+                    newData.x = ih.currentPoint().x;
+                    newData.y = ih.currentPoint().y;
+                    selectData = newData;
+
+                    break;
+            }
+        }
+    }
+
     let selectData = {
         x: 0,
         y: 0,
         id: NaN,
     };
     onMount(() => {
+        loadEnums();
+        ih = new InputManager({ onAny: anyHandler });
+
+        writePluginAPI(ih);
         if (icanvasel !== null && dcanvasel !== null)
             de = new DrawingEngine(
                 icanvasel,
@@ -74,7 +136,7 @@
 
         // TODO: replace all instances of window.boardsocket
         // with a state variable
-        writePluginAPI();
+
         window.boardSocket = wsutil.opensocket(
             wsurl,
             wsutil.defaultMessageHandler(ph, de, mm, () => {
@@ -110,83 +172,101 @@
     });
 
     //  listen to new drawings
-    function handleEvent(ev: PointerEvent) {
-        let boardLocation = de.mapScreenPointToBoardPoint(
-            ev.clientX,
-            ev.clientY
-        );
-        de.trySendPosition(
-            boardLocation.x,
-            boardLocation.y
-        );
-        let metadata = ih.actionMeta(ev);
-        // console.log("metadata");
-        // console.log(metadata);
-        if (
-            ih.currAction() === UserActions.DRAW &&
-            metadata.lift === -1
-        ) {
-            // pause drawing
-            let objs = ph.pauseAll({
-                ...boardLocation,
-            });
-            for (let k of objs) {
-                ph.commitObject(k);
-            }
-        }
-        // TODO: zoom
-        switch (ih.actionType(ev)) {
-            case UserActions.PAN:
-                de.endDraw();
-                de.pan(
-                    ih.previousPoint().x,
-                    ih.previousPoint().y,
-                    ev.clientX,
-                    ev.clientY
-                );
-                break;
-            case UserActions.DRAW:
-                de.draw(boardLocation.x, boardLocation.y);
-                ph.offer({
-                    x: boardLocation.x,
-                    y: boardLocation.y,
-                });
-                break;
-            case UserActions.SELECT:
-                de.endDraw();
-                console.log("select");
-                let newData = {
-                    x: 0,
-                    y: 0,
-                    id: -1,
-                };
-                let etarg = ev.target;
-                if (etarg instanceof Element) {
-                    let el = etarg as Element;
-                    newData.id = parseInt(el.id);
-                    newData.x = ih.currentPoint().x;
-                    newData.y = ih.currentPoint().y;
-                    selectData = newData;
-                }
-                break;
-            default:
-                de.endDraw();
-                break;
-        }
-        // icanvasel.dispatchEvent(ev);
-    }
+    // function handleEvent(ev: PointerEvent) {
+    //     let boardLocation = de.mapScreenPointToBoardPoint(
+    //         ev.clientX,
+    //         ev.clientY
+    //     );
+    //     de.trySendPosition(
+    //         boardLocation.x,
+    //         boardLocation.y
+    //     );
+    //     let metadata = ih.actionMeta(ev);
+    //     // console.log("metadata");
+    //     // console.log(metadata);
+    //     if (
+    //         ih.currAction() === UserActions.DRAW &&
+    //         metadata.lift === -1
+    //     ) {
+    //         // pause drawing
+    //         let objs = ph.pauseAll({
+    //             ...boardLocation,
+    //         });
+    //         for (let k of objs) {
+    //             ph.commitObject(k);
+    //         }
+    //     }
+    //     // TODO: zoom
+    //     switch (ih.actionType(ev)) {
+    //         case UserActions.PAN:
+    //             de.endDraw();
+    //             de.pan(
+    //                 ih.previousPoint().x,
+    //                 ih.previousPoint().y,
+    //                 ev.clientX,
+    //                 ev.clientY
+    //             );
+    //             break;
+    //         case UserActions.DRAW:
+    //             de.draw(boardLocation.x, boardLocation.y);
+    //             ph.offer({
+    //                 x: boardLocation.x,
+    //                 y: boardLocation.y,
+    //             });
+    //             break;
+    //         case UserActions.SELECT:
+    //             de.endDraw();
+    //             console.log("select");
+    //             let newData = {
+    //                 x: 0,
+    //                 y: 0,
+    //                 id: -1,
+    //             };
+    //             let etarg = ev.target;
+    //             if (etarg instanceof Element) {
+    //                 let el = etarg as Element;
+    //                 newData.id = parseInt(el.id);
+    //                 newData.x = ih.currentPoint().x;
+    //                 newData.y = ih.currentPoint().y;
+    //                 selectData = newData;
+    //             }
+    //             break;
+    //         default:
+    //             de.endDraw();
+    //             break;
+    //     }
+    //     // icanvasel.dispatchEvent(ev);
+    // }
 
-    function handlekeydown(ev: KeyboardEvent) {
-        console.log("down");
-        // TODO: here
-        for (let f of ih.getFns(ev.key)) ph.activateFn(f);
-    }
+    // function handlekeydown(ev: KeyboardEvent) {
+    //     console.log("down");
+    //     // TODO: here
+    //     for (let f of ih.getFns(ev.key)) ph.activateFn(f);
+    // }
 
-    function handlekeyup(ev: KeyboardEvent) {
-        console.log("up");
-        for (let f of ih.getFns(ev.key)) {
-            ph.deactivateAndCommit(f);
+    // function handlekeyup(ev: KeyboardEvent) {
+    //     console.log("up");
+    //     for (let f of ih.getFns(ev.key)) {
+    //         ph.deactivateAndCommit(f);
+    //     }
+    // }
+    let pointerCoords = { x: 0, y: 0 };
+    function handleInputs(
+        ev: KeyboardEvent | PointerEvent
+    ) {
+        if (!("key" in ev)) {
+            ev as PointerEvent;
+            pointerCoords = de.mapScreenPointToBoardPoint(
+                ev.clientX,
+                ev.clientY
+            );
         }
+
+        ih.handleNewEvent(
+            ev,
+            pointerCoords.x,
+            pointerCoords.y
+        );
     }
 </script>
 
@@ -198,11 +278,11 @@
         class="bcanvas"
         viewBox="0 0 600 800"
         bind:this={svgel}
-        on:pointerdown={handleEvent}
-        on:pointermove={handleEvent}
-        on:pointerup={handleEvent}
-        on:keydown={handlekeydown}
-        on:keyup={handlekeyup}
+        on:pointerdown={handleInputs}
+        on:pointermove={handleInputs}
+        on:pointerup={handleInputs}
+        on:keydown={handleInputs}
+        on:keyup={handleInputs}
         tabindex="-1"
     />
 
