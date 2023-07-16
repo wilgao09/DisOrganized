@@ -1,5 +1,6 @@
 import CanvasManager from "./canvasmanager";
 import type MultiplayerManager from "./multiplayer";
+import type { UserBrush } from "./usertypes";
 import { WSMessageCode } from "./wsutil";
 
 const CURSOR_REFRESH = 10;
@@ -537,5 +538,9 @@ export default class DrawingEngine {
     }
     public endDraw() {
         this.cm.endDraw();
+    }
+
+    public setBrush(b: UserBrush) {
+        this.cm.setMyBrush(b);
     }
 }

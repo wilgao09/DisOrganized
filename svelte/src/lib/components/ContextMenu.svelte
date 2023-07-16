@@ -25,6 +25,7 @@
         <button
             class="do-button do-bwhite"
             on:click={() => {
+                visible = false;
                 option[1]();
             }}>{option[0]}</button
         >

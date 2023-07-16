@@ -5,7 +5,7 @@
     import DrawingEngine from "./dengine";
     import * as wsutil from "./wsutil";
     import fetchPlugins from "./pluginfetch";
-    import { loadEnums } from "./usertypes";
+    import { defaultBrush, loadEnums } from "./usertypes";
     import { declName, destIp, destPort } from "$lib/dest";
     import { get } from "svelte/store";
     import { onMount } from "svelte";
@@ -14,6 +14,8 @@
     import MultiplayerManager from "./multiplayer";
     import SelectedMenu from "./SelectedMenu.svelte";
     import { loadingCompleted } from "$lib/firstload";
+    import DraggableWindow from "$lib/components/DraggableWindow.svelte";
+    import ColorPicker from "svelte-awesome-color-picker";
     // import DrawingEngine from "./dengine";
     let wsurl = `ws://${encodeURIComponent(
         get(destIp)
@@ -40,6 +42,9 @@
     let dcanvasel: HTMLCanvasElement;
 
     let boardFrame: Element;
+
+    let selectedColor = "#000000ff";
+    let selectedSize = 5;
     function anyHandler(ev: InputHandling.InputEvent) {
         if (ev.type === InputHandling.InputEventType.KEY) {
             if (ev.lift < 0) {
@@ -157,6 +162,9 @@
                     msgType: wsutil.WSMessageCode.GET_USERS,
                     msg: "",
                 });
+                ph.setSVGStyle(defaultBrush);
+                de.setBrush(defaultBrush);
+
                 setInterval(() => {
                     window.boardSocket({
                         msgType: wsutil.WSMessageCode.FETCH,
@@ -171,85 +179,6 @@
         });
     });
 
-    //  listen to new drawings
-    // function handleEvent(ev: PointerEvent) {
-    //     let boardLocation = de.mapScreenPointToBoardPoint(
-    //         ev.clientX,
-    //         ev.clientY
-    //     );
-    //     de.trySendPosition(
-    //         boardLocation.x,
-    //         boardLocation.y
-    //     );
-    //     let metadata = ih.actionMeta(ev);
-    //     // console.log("metadata");
-    //     // console.log(metadata);
-    //     if (
-    //         ih.currAction() === UserActions.DRAW &&
-    //         metadata.lift === -1
-    //     ) {
-    //         // pause drawing
-    //         let objs = ph.pauseAll({
-    //             ...boardLocation,
-    //         });
-    //         for (let k of objs) {
-    //             ph.commitObject(k);
-    //         }
-    //     }
-    //     // TODO: zoom
-    //     switch (ih.actionType(ev)) {
-    //         case UserActions.PAN:
-    //             de.endDraw();
-    //             de.pan(
-    //                 ih.previousPoint().x,
-    //                 ih.previousPoint().y,
-    //                 ev.clientX,
-    //                 ev.clientY
-    //             );
-    //             break;
-    //         case UserActions.DRAW:
-    //             de.draw(boardLocation.x, boardLocation.y);
-    //             ph.offer({
-    //                 x: boardLocation.x,
-    //                 y: boardLocation.y,
-    //             });
-    //             break;
-    //         case UserActions.SELECT:
-    //             de.endDraw();
-    //             console.log("select");
-    //             let newData = {
-    //                 x: 0,
-    //                 y: 0,
-    //                 id: -1,
-    //             };
-    //             let etarg = ev.target;
-    //             if (etarg instanceof Element) {
-    //                 let el = etarg as Element;
-    //                 newData.id = parseInt(el.id);
-    //                 newData.x = ih.currentPoint().x;
-    //                 newData.y = ih.currentPoint().y;
-    //                 selectData = newData;
-    //             }
-    //             break;
-    //         default:
-    //             de.endDraw();
-    //             break;
-    //     }
-    //     // icanvasel.dispatchEvent(ev);
-    // }
-
-    // function handlekeydown(ev: KeyboardEvent) {
-    //     console.log("down");
-    //     // TODO: here
-    //     for (let f of ih.getFns(ev.key)) ph.activateFn(f);
-    // }
-
-    // function handlekeyup(ev: KeyboardEvent) {
-    //     console.log("up");
-    //     for (let f of ih.getFns(ev.key)) {
-    //         ph.deactivateAndCommit(f);
-    //     }
-    // }
     let pointerCoords = { x: 0, y: 0 };
     function handleInputs(
         ev: KeyboardEvent | PointerEvent
@@ -267,6 +196,15 @@
             pointerCoords.x,
             pointerCoords.y
         );
+    }
+
+    function changeBrush() {
+        let b = {
+            strokeStyle: selectedColor,
+            lineWidth: selectedSize,
+        };
+        ph.setSVGStyle(b);
+        de.setBrush(b);
     }
 </script>
 
@@ -313,6 +251,30 @@
         visible={!Number.isNaN(selectData.id)}
     />
 {/if}
+<DraggableWindow windowName="Brush Selector">
+    <ColorPicker
+        isOpen={true}
+        isPopup={false}
+        disableCloseClickOutside={true}
+        isInput={false}
+        label=""
+        isA11y={false}
+        bind:hex={selectedColor}
+        on:input={changeBrush}
+    />
+    <input
+        type="range"
+        min="1"
+        max="128"
+        bind:value={selectedSize}
+        on:input={changeBrush}
+    />
+    <input
+        type="number"
+        bind:value={selectedSize}
+        on:input={changeBrush}
+    />
+</DraggableWindow>
 
 <!--  -->
 

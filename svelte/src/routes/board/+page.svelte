@@ -1,4 +1,5 @@
 <script>
+    import DraggableWindow from "$lib/components/DraggableWindow.svelte";
     import { loadingCompleted } from "$lib/firstload";
     import LoadingScreen from "./LoadingScreen.svelte";
     // import { page } from "$app/stores";

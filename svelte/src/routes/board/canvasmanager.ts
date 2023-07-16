@@ -451,6 +451,16 @@ export default class CanvasManager {
         c.lineJoin = "round";
     }
 
+    public setMyBrush(b: UserBrush) {
+        this.myBrush = b;
+        this.setBrush(this.localCtx, this.myBrush);
+        this.setBrush(this.localOSCtx, this.myBrush);
+        window.boardSocket({
+            msgType: wsutil.WSMessageCode.SET_BRUSH,
+            msg: JSON.stringify(b),
+        });
+    }
+
     public foreignDraw(
         b: UserBrush,
         x0: number,

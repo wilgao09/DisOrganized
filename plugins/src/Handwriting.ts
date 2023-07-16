@@ -105,7 +105,8 @@ class Handwriting implements PluginFn {
         ) {
             let w = o.width;
             let h = o.height;
-            o.onmount.push((el) => {
+            o.onmount.push((e: SVGElement) => {
+                let el = e as SVGGraphicsElement;
                 var bb = el.getBBox();
                 var widthTransform = w / bb.width;
                 var heightTransform = h / bb.height;
@@ -120,15 +121,28 @@ class Handwriting implements PluginFn {
                 );
                 el.setAttribute(
                     "transform",
-                    `matrix(${
-                        widthTransform / 2
-                    }, 0, 0, ${heightTransform}, 0, ${h})`
+                    `matrix(${widthTransform}, 0, 0, ${
+                        1.5 * heightTransform
+                    }, 0, ${h})`
                 );
-
                 el.setAttribute(
-                    "style",
-                    "font: bold 30px sans-serif;"
+                    "fill",
+                    el.getAttribute("stroke")
                 );
+                el.setAttribute("stroke-width", "0");
+                // if (el.getAttribute("style") !== "") {
+                //     el.setAttribute(
+                //         "style",
+                //         el.getAttribute("style") +
+                //             ";" +
+                //             "font: sans-serif;"
+                //     );
+                // } else {
+                //     el.setAttribute(
+                //         "style",
+                //         "font:  sans-serif;"
+                //     );
+                // }
             });
 
             delete o.width;

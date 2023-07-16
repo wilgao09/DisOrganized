@@ -62,7 +62,7 @@ declare global {
         tag: string;
         id: number;
         menu: [string, () => void][];
-        onmount: (() => void)[];
+        onmount: ((el: SVGElement) => void)[];
         [key: string]: any;
     }
     namespace InputHandling {

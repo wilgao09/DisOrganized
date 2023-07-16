@@ -17,8 +17,8 @@ type configFileFormat struct {
 }
 
 var defaultConfigFile = configFileFormat{
-	Plugins:  []string{"Rect", "Brush", "Poly", "Handwriting"},
-	Keybinds: []string{"b", "true", "s", "t"},
+	Plugins:  []string{"Rect", "Poly", "Handwriting"},
+	Keybinds: []string{"b", "s", "t"},
 }
 
 const (

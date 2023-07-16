@@ -1,5 +1,6 @@
 import { writable, type Writable } from "svelte/store";
 import * as wsutil from "./wsutil";
+import { defaultBrush, type UserBrush } from "./usertypes";
 
 export default class PluginManager {
     private fnorder: Array<PluginFn>;
@@ -8,7 +9,7 @@ export default class PluginManager {
     // some components rely on state changes in plugins
     // whenever a change is made, this number gets incremented
     public newChange: Writable<number> = writable(0);
-
+    private svgStyle: UserBrush;
     public notifyChange() {
         this.newChange.update((x) => x + 1);
     }
@@ -17,9 +18,11 @@ export default class PluginManager {
         if (oldhandler) {
             this.fnorder = oldhandler.fnorder;
             this.fnnamemap = oldhandler.fnnamemap;
+            this.svgStyle = oldhandler.svgStyle;
         } else {
             this.fnorder = [];
             this.fnnamemap = new Map();
+            this.svgStyle = defaultBrush;
         }
     }
 
@@ -102,6 +105,16 @@ export default class PluginManager {
             //offer to t1
             i = t1.offer(i);
         }
+        // TODO: a better criterion
+        if (i !== undefined) {
+            // if (i.style === undefined) i.style = "";
+            i["fill"] = "rgba(0,0,0,0)";
+            i[
+                "stroke-width"
+            ] = `${this.svgStyle.lineWidth}`;
+            i["stroke"] = `${this.svgStyle.strokeStyle}`;
+            // i.style += `;fill:rgba(0,0,0,0);stroke-width:${this.svgStyle.lineWidth};stroke:${this.svgStyle.strokeStyle}`;
+        }
         return i;
     }
 
@@ -180,5 +193,9 @@ export default class PluginManager {
         }
 
         return ans;
+    }
+
+    public setSVGStyle(b: UserBrush) {
+        this.svgStyle = b;
     }
 }
