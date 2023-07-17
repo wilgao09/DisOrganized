@@ -50,7 +50,11 @@
             if (ev.lift < 0) {
                 console.log("up");
                 for (let f of ih.getFns(ev.value)) {
-                    ph.deactivateAndCommit(f);
+                    ph.deactivateAndCommit(f, (i) => {
+                        let aabb = i.AABB;
+                        if (aabb !== undefined)
+                            de.clearLocalRect(...aabb);
+                    });
                 }
             }
             if (ev.lift > 0) {
@@ -149,34 +153,36 @@
                 loadingCompleted.set(true);
             }),
             () => {
-                window.boardSocket({
-                    msgType:
-                        wsutil.WSMessageCode.GET_MY_DATA,
-                    msg: "",
-                });
-                window.boardSocket({
-                    msgType: wsutil.WSMessageCode.FETCH,
-                    msg: "",
-                });
-                window.boardSocket({
-                    msgType: wsutil.WSMessageCode.GET_USERS,
-                    msg: "",
-                });
-                ph.setSVGStyle(defaultBrush);
-                de.setBrush(defaultBrush);
-
-                setInterval(() => {
+                fetchPlugins(ph, ih, () => {
+                    console.log("done fetching");
+                    window.boardSocket({
+                        msgType:
+                            wsutil.WSMessageCode
+                                .GET_MY_DATA,
+                        msg: "",
+                    });
                     window.boardSocket({
                         msgType: wsutil.WSMessageCode.FETCH,
                         msg: "",
                     });
-                }, 30000);
+                    window.boardSocket({
+                        msgType:
+                            wsutil.WSMessageCode.GET_USERS,
+                        msg: "",
+                    });
+                    ph.setSVGStyle(defaultBrush);
+                    de.setBrush(defaultBrush);
+
+                    setInterval(() => {
+                        window.boardSocket({
+                            msgType:
+                                wsutil.WSMessageCode.FETCH,
+                            msg: "",
+                        });
+                    }, 30000);
+                });
             }
         );
-
-        fetchPlugins(ph, ih, () => {
-            console.log("done fetching");
-        });
     });
 
     let pointerCoords = { x: 0, y: 0 };
@@ -242,7 +248,13 @@
     /> -->
 </div>
 <Settings {mm} />
-<Toolbar pluginManager={ph} />
+<Toolbar
+    pluginManager={ph}
+    deactivateCb={(i) => {
+        let aabb = i.AABB;
+        if (aabb !== undefined) de.clearLocalRect(...aabb);
+    }}
+/>
 <!-- TODO: fix this -->
 {#if de !== undefined}
     <SelectedMenu

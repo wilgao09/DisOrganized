@@ -135,12 +135,19 @@ class Rect implements PluginFn {
     }
 
     public onDeactivate() {
+        let aabb: [number, number, number, number] = [
+            this.w,
+            this.n,
+            this.e - this.w,
+            this.s - this.n,
+        ];
         return {
             tag: "rect",
             x: this.w,
             y: this.n,
             width: this.e - this.w,
             height: this.s - this.n,
+            AABB: aabb,
         };
     }
 }

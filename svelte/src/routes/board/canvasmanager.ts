@@ -144,6 +144,16 @@ export default class CanvasManager {
 
     public redo() {}
 
+    public clearLocalRect(
+        x: number,
+        y: number,
+        w: number,
+        h: number
+    ) {
+        this.localCtx.clearRect(x, y, w, h);
+        this.localOSCtx.clearRect(x, y, w, h);
+    }
+
     /**
      * Extends a canvas c in the negative x direction. This function assumes that the x
      * coordinate lies outside of the current space. The new x negative space is equal to

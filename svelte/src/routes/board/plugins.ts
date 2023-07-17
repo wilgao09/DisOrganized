@@ -44,7 +44,7 @@ export default class PluginManager {
         this.notifyChange();
     }
 
-    public activateFn(s: string) {
+    public activateFn(s: string): PluginProduct | void {
         let k;
         if ((k = this.fnnamemap.get(s)) === undefined) {
             console.error(
@@ -63,7 +63,9 @@ export default class PluginManager {
             k[0] + 1
         );
     }
-    public async deactivateFn(s: string): Promise<any> {
+    public async deactivateFn(
+        s: string
+    ): Promise<PluginProduct | void> {
         let k;
         if ((k = this.fnnamemap.get(s)) === undefined) {
             console.error(
@@ -81,7 +83,10 @@ export default class PluginManager {
 
     // go through all active functions and chain data through them until you get an undefined or you reach the end
     // return the end result
-    public offer(p: any, start?: number): any {
+    public offer(
+        p: any,
+        start?: number
+    ): PluginProduct | void {
         let i: any = p;
         let t1, t2;
         for (
@@ -135,10 +140,15 @@ export default class PluginManager {
         });
     }
 
-    public async deactivateAndCommit(fname: string) {
+    public async deactivateAndCommit(
+        fname: string,
+        cb: (_: PluginProduct) => void
+    ) {
         let m = await this.deactivateFn(fname);
-        if (m !== undefined && m !== null)
+        if (m !== undefined && m !== null) {
             this.commitObject(m);
+            cb(m);
+        }
     }
 
     /**

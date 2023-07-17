@@ -26,9 +26,12 @@ export default async function (
         ).json();
     console.log(config);
 
+    let n = config.Plugins.length;
+
     for (let i = 0; i < config.Plugins.length; i++) {
         let plugin = config.Plugins[i];
         loadPlugin(plugin, () => {
+            n--;
             // add it to the plugin handler and the input handler
             // TODO: UNSAFE-EVAL! think of a better way of doing this
             let t: PluginFn;
@@ -44,9 +47,12 @@ export default async function (
             } else {
                 p.activateFn(t.fnName);
             }
+
+            if (n === 0) {
+                cb();
+            }
         });
     }
-    cb();
 }
 
 function loadPlugin(name: string, cb: () => void) {

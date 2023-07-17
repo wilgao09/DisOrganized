@@ -190,6 +190,12 @@ class Handwriting implements PluginFn {
                                         response[1][0][1][0],
                                     width: width,
                                     height: height,
+                                    AABB: [
+                                        x,
+                                        y,
+                                        width,
+                                        height,
+                                    ],
                                 });
                                 break;
                             case 403:

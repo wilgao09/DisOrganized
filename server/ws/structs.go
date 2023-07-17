@@ -14,7 +14,7 @@ var UserColorPalette []UserColor = []UserColor{
 	"#FF37A6", "#FFCAE9", "#5CF64A", "#B56576", "#E56B6F", "#EAAC8B",
 }
 
-var DefaultBrush = "{\"strokeStyle\":\"#000000\",\"lineWidth\":5}"
+var DefaultBrush = "{\"strokeStyle\":\"#000000ff\",\"lineWidth\":5}"
 
 type UserData struct {
 	conn   *websocket.Conn

@@ -10,6 +10,11 @@
     export let pluginManager;
 
     /**
+     * @type {(_:PluginProduct)=>void}
+     */
+    export let deactivateCb;
+
+    /**
      * @type {[string,boolean][]}
      */
     let toolsToRender = Array.from(
@@ -35,7 +40,8 @@
             on:click={() => {
                 if (tool[1]) {
                     pluginManager.deactivateAndCommit(
-                        tool[0]
+                        tool[0],
+                        deactivateCb
                     );
                 } else {
                     pluginManager.activateFn(tool[0]);

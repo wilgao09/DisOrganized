@@ -543,4 +543,13 @@ export default class DrawingEngine {
     public setBrush(b: UserBrush) {
         this.cm.setMyBrush(b);
     }
+
+    public clearLocalRect(
+        x: number,
+        y: number,
+        w: number,
+        h: number
+    ) {
+        this.cm.clearLocalRect(x, y, w, h);
+    }
 }
