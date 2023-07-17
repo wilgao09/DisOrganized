@@ -37,10 +37,10 @@
                 moveWithCursor
             )}
     >
-        <span>
+        <div>
             {windowName}
-        </span>
-        <span class="draggable-window-x"> ✖ </span>
+        </div>
+        <!-- <div class="draggable-window-x">✖</div> -->
     </div>
     <div class="draggable-window-content">
         <slot />
@@ -50,20 +50,27 @@
 <style>
     .draggable-window {
         position: absolute;
-        height: 300px;
-        width: 400px;
+        padding: 4px;
+        /* height: 300px;
+        width: 400px; */
     }
     .draggable-window-heading {
-        background-color: magenta;
+        background-color: var(--hover-1);
         display: flex;
         justify-content: space-between;
         user-select: none;
+        padding: 2px 8px;
     }
-    .draggable-window-x {
-        background-color: cyan;
+    /* .draggable-window-x {
+        background-color: var(--background-err);
         user-select: none;
-    }
+        width: 1.2em;
+        height: 1.2em;
+        text-align: center;
+        line-height: 1.3em;
+    } */
     .draggable-window-content {
-        background-color: green;
+        background-color: var(--background-1);
+        padding: 8px;
     }
 </style>

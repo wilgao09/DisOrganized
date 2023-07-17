@@ -274,18 +274,35 @@
         bind:hex={selectedColor}
         on:input={changeBrush}
     />
-    <input
-        type="range"
-        min="1"
-        max="128"
-        bind:value={selectedSize}
-        on:input={changeBrush}
-    />
-    <input
-        type="number"
-        bind:value={selectedSize}
-        on:input={changeBrush}
-    />
+    <div style="display:flex;">
+        <div>Size:</div>
+        <input
+            type="range"
+            min="1"
+            max="99"
+            bind:value={selectedSize}
+            on:input={changeBrush}
+            list="brush-size-tickmarks"
+        />
+        <input
+            type="number"
+            bind:value={selectedSize}
+            on:input={changeBrush}
+            min="1"
+            max="99"
+        />
+    </div>
+    <datalist id="brush-size-tickmarks">
+        <option value="10" />
+        <option value="20" />
+        <option value="30" />
+        <option value="40" />
+        <option value="50" />
+        <option value="60" />
+        <option value="70" />
+        <option value="80" />
+        <option value="90" />
+    </datalist>
 </DraggableWindow>
 
 <!--  -->
