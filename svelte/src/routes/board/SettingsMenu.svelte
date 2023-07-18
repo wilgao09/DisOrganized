@@ -1,8 +1,10 @@
 <script lang="ts">
     import ArrowBackButton from "$lib/components/ArrowBackButton.svelte";
+    import PluginSettings from "./PluginSettings.svelte";
     import SettingsMenuButton from "./SettingsMenuButton.svelte";
     import UsersList from "./UsersList.svelte";
     import type MultiplayerManager from "./multiplayer";
+    import type PluginManager from "./plugins";
 
     // /**
     //  * @type {()=>void}
@@ -10,6 +12,7 @@
     export let closeFunction: () => void;
 
     export let mm: MultiplayerManager;
+    export let pm: PluginManager;
 
     // TODO: move this into an external variable
     let currentPage = "settings";
@@ -28,6 +31,15 @@
                 }}
             />
         </div>
+        <div class="settings">
+            <SettingsMenuButton
+                name="Plugin Settings"
+                dir="right"
+                on:click={() => {
+                    currentPage = "plugin-settings";
+                }}
+            />
+        </div>
     </div>
 {:else if currentPage == "users"}
     <UsersList
@@ -36,6 +48,8 @@
             currentPage = "settings";
         }}
     />
+{:else if currentPage == "plugin-settings"}
+    <PluginSettings {pm} />
 {:else}
     <div>shit fuck</div>
 {/if}

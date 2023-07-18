@@ -118,6 +118,24 @@ declare global {
         [key: string]: any;
     }
 
+    declare namespace PluginSettings {
+        enum PluginSettingType {
+            SELECT = "select",
+            RADIO = "radio",
+            CHECKBOX = "checkbox",
+            TEXT = "text",
+        }
+        interface IPluginSetting {
+            type: PluginSettingType;
+            options: [display: string, value: string][];
+            onValue: (value: string) => void;
+        }
+
+        interface IPluginSettings {
+            [key: string]: IPluginSetting;
+        }
+    }
+
     interface PluginFn {
         /**
          * Feed an object into this plugin. A plugin might return anything after
@@ -129,6 +147,7 @@ declare global {
         offer: (d: PluginProduct) => PluginProduct | void;
         fnName: string;
         fnPrio: number;
+        settings?: PluginSettings.IPluginSettings;
         /**
          * Initializes plugin and allows the function to receive `offer` calls
          * @returns anything

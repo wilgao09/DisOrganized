@@ -439,6 +439,8 @@ export default class CanvasManager {
             this.localOSCanvas,
             ...this.negspace
         );
+
+        this.setBrush(this.localCtx, this.myBrush);
     }
 
     private setBrush(

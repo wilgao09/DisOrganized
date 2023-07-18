@@ -118,7 +118,13 @@ export default class PluginManager {
                 "stroke-width"
             ] = `${this.svgStyle.lineWidth}`;
             i["stroke"] = `${this.svgStyle.strokeStyle}`;
-            // i.style += `;fill:rgba(0,0,0,0);stroke-width:${this.svgStyle.lineWidth};stroke:${this.svgStyle.strokeStyle}`;
+            // if there is an AABB, expand it so that it reaches brush
+            if (i["AABB"] !== undefined) {
+                i["AABB"][0] -= this.svgStyle.lineWidth;
+                i["AABB"][1] -= this.svgStyle.lineWidth;
+                i["AABB"][2] += 2 * this.svgStyle.lineWidth;
+                i["AABB"][3] += 2 * this.svgStyle.lineWidth;
+            }
         }
         return i;
     }
@@ -145,8 +151,11 @@ export default class PluginManager {
         cb: (_: PluginProduct) => void
     ) {
         let m = await this.deactivateFn(fname);
+        // deepcopy it, removing unessential data
+        let copy = JSON.parse(JSON.stringify(m));
+        delete copy.AABB;
         if (m !== undefined && m !== null) {
-            this.commitObject(m);
+            this.commitObject(copy);
             cb(m);
         }
     }
@@ -207,5 +216,29 @@ export default class PluginManager {
 
     public setSVGStyle(b: UserBrush) {
         this.svgStyle = b;
+    }
+
+    public getPluginsWithOptions(): string[] {
+        let ans: string[] = [];
+        for (let [
+            fnName,
+            [ind, _],
+        ] of this.fnnamemap.entries()) {
+            if (this.fnorder[ind].settings !== undefined) {
+                ans.push(fnName);
+            }
+        }
+        return ans;
+    }
+
+    public getPluginOptionsByName(
+        name: string
+    ): PluginSettings.IPluginSettings | undefined {
+        let ob = this.fnnamemap.get(name);
+        if (ob === undefined) {
+            return undefined;
+        } else {
+            return this.fnorder[ob[0]].settings;
+        }
     }
 }

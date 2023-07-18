@@ -2,8 +2,10 @@
     import defocus from "$lib/defocus";
     import SettingsMenu from "./SettingsMenu.svelte";
     import type MultiplayerManager from "./multiplayer";
+    import type PluginManager from "./plugins";
 
     export let mm: MultiplayerManager;
+    export let pm: PluginManager;
     let menuOpened = false;
 </script>
 
@@ -27,6 +29,7 @@
         <SettingsMenu
             closeFunction={() => (menuOpened = false)}
             {mm}
+            {pm}
         />
     </div>
 {/if}

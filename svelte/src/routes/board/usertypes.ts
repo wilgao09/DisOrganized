@@ -21,6 +21,12 @@ enum UserActions {
     TYPE = "type", // TODO: ???
     NONE = "none", // NONE is used to represent null
 }
+enum PluginSettingType {
+    SELECT = "select",
+    RADIO = "radio",
+    CHECKBOX = "checkbox",
+    TEXT = "text",
+}
 
 const userBrushFieldsStr = ["strokeStyle"] as const;
 const userBrushFieldsNum = ["lineWidth"] as const;
@@ -39,6 +45,9 @@ function loadEnums() {
     window.InputHandling = {
         InputEventType,
         UserActions,
+    };
+    window.PluginSettings = {
+        PluginSettingType,
     };
 }
 

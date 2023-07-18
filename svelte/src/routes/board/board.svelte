@@ -247,7 +247,7 @@
 
     /> -->
 </div>
-<Settings {mm} />
+<Settings {mm} pm={ph} />
 <Toolbar
     pluginManager={ph}
     deactivateCb={(i) => {

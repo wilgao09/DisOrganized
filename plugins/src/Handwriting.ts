@@ -9,6 +9,7 @@ class Handwriting implements PluginFn {
     points: [number[], number[]][];
     fnName: string;
     fnPrio: number;
+    settings: PluginSettings.IPluginSettings;
     constructor() {
         this.x0 = null;
         this.y0 = null;
@@ -18,6 +19,17 @@ class Handwriting implements PluginFn {
         this.points = [[[], []]];
         this.fnName = "Handwriting";
         this.fnPrio = 5;
+        this.settings = {
+            font: {
+                type: PluginSettings.PluginSettingType
+                    .SELECT,
+                options: [
+                    ["TNR", "TNR"],
+                    ["lorem", "ipsum"],
+                ],
+                onValue: (x) => console.log(x),
+            },
+        };
         console.log("initialized handwriting");
         console.log(this.points);
     }
