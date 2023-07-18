@@ -29,6 +29,71 @@ class Handwriting implements PluginFn {
                 ],
                 onValue: (x) => console.log(x),
             },
+            dummy: {
+                type: PluginSettings.PluginSettingType
+                    .RADIO,
+                options: [
+                    ["display", "internal1"],
+                    ["seocnd dispaly", "second internal"],
+                    ["really lon gop", "int3"],
+                    ["display", "internal1"],
+                    ["seocnd dispaly", "second internal"],
+                    ["really lon gop", "int3"],
+                    ["display", "internal1"],
+                    ["seocnd dispaly", "second internal"],
+                    ["really lon gop", "int3"],
+                ],
+                onValue: (x) => console.log(x),
+            },
+            sontteeext: {
+                type: PluginSettings.PluginSettingType.TEXT,
+                options: [
+                    ["huh", "what"],
+                    ["hu2h", "wha2t"],
+                ],
+                onValue: (x) => console.log(x),
+            },
+            dummeey: {
+                type: PluginSettings.PluginSettingType
+                    .RADIO,
+                options: [
+                    ["display", "internal1"],
+                    ["seocnd dispaly", "second internal"],
+                    ["really lon gop", "int3"],
+                    ["display", "internal1"],
+                    ["seocnd dispaly", "second internal"],
+                    ["really lon gop", "int3"],
+                    ["display", "internal1"],
+                    ["seocnd dispaly", "second internal"],
+                    ["really lon gop", "int3"],
+                ],
+                onValue: (x) => console.log(x),
+            },
+            dummeeeeey: {
+                type: PluginSettings.PluginSettingType
+                    .RADIO,
+                options: [
+                    ["display", "internal1"],
+                    ["seocnd dispaly", "second internal"],
+                    ["really lon gop", "int3"],
+                    ["display", "internal1"],
+                    ["seocnd dispaly", "second internal"],
+                    ["really lon gop", "int3"],
+                    ["display", "internal1"],
+                    ["seocnd dispaly", "second internal"],
+                    ["really lon gop", "int3"],
+                    ["display", "internal1"],
+                    ["seocnd dispaly", "second internal"],
+                    ["really lon gop", "int3"],
+                    ["display", "internal1"],
+                    ["seocnd dispaly", "second internal"],
+                    ["really lon gop", "int3"],
+                    ["display", "internal1"],
+                    ["seocnd dispaly", "second internal"],
+                    ["really lon gop", "int3"],
+                ],
+                onValue: (x) => console.log(x),
+            },
         };
         console.log("initialized handwriting");
         console.log(this.points);

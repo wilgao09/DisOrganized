@@ -49,7 +49,12 @@
         }}
     />
 {:else if currentPage == "plugin-settings"}
-    <PluginSettings {pm} />
+    <PluginSettings
+        {pm}
+        back={() => {
+            currentPage = "settings";
+        }}
+    />
 {:else}
     <div>shit fuck</div>
 {/if}
@@ -61,7 +66,7 @@
         /* padding: 8%; */
     }
     .settings {
-        padding: 8%;
+        /* padding: 4%; */
         display: flex;
         flex-direction: column;
         background-color: var(--background-2);

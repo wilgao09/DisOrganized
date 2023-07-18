@@ -48,5 +48,7 @@
         width: 27%;
         height: 100%;
         background-color: var(--background-2);
+        padding: 2%;
+        overflow-y: auto;
     }
 </style>

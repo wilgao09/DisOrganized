@@ -3,7 +3,7 @@
 
     export let name: string;
 
-    export let dir: string;
+    export let dir: string = "right";
 </script>
 
 <button class="settings-tile" on:click>
