@@ -127,8 +127,14 @@ declare global {
         }
         interface IPluginSetting {
             type: PluginSettingType;
-            options: [display: string, value: string][];
+            options: IOption[];
             onValue: (value: string) => void;
+        }
+
+        interface IOption {
+            name: string;
+            value: string;
+            state: string;
         }
 
         interface IPluginSettings {
@@ -147,7 +153,7 @@ declare global {
         offer: (d: PluginProduct) => PluginProduct | void;
         fnName: string;
         fnPrio: number;
-        settings?: PluginSettings.IPluginSettings;
+        settings?: () => PluginSettings.IPluginSettings;
         /**
          * Initializes plugin and allows the function to receive `offer` calls
          * @returns anything

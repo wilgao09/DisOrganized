@@ -9,7 +9,7 @@ class Handwriting implements PluginFn {
     points: [number[], number[]][];
     fnName: string;
     fnPrio: number;
-    settings: PluginSettings.IPluginSettings;
+    font: string;
     constructor() {
         this.x0 = null;
         this.y0 = null;
@@ -19,84 +19,7 @@ class Handwriting implements PluginFn {
         this.points = [[[], []]];
         this.fnName = "Handwriting";
         this.fnPrio = 5;
-        this.settings = {
-            font: {
-                type: PluginSettings.PluginSettingType
-                    .SELECT,
-                options: [
-                    ["TNR", "TNR"],
-                    ["lorem", "ipsum"],
-                ],
-                onValue: (x) => console.log(x),
-            },
-            dummy: {
-                type: PluginSettings.PluginSettingType
-                    .RADIO,
-                options: [
-                    ["display", "internal1"],
-                    ["seocnd dispaly", "second internal"],
-                    ["really lon gop", "int3"],
-                    ["display", "internal1"],
-                    ["seocnd dispaly", "second internal"],
-                    ["really lon gop", "int3"],
-                    ["display", "internal1"],
-                    ["seocnd dispaly", "second internal"],
-                    ["really lon gop", "int3"],
-                ],
-                onValue: (x) => console.log(x),
-            },
-            sontteeext: {
-                type: PluginSettings.PluginSettingType.TEXT,
-                options: [
-                    ["huh", "what"],
-                    ["hu2h", "wha2t"],
-                ],
-                onValue: (x) => console.log(x),
-            },
-            dummeey: {
-                type: PluginSettings.PluginSettingType
-                    .RADIO,
-                options: [
-                    ["display", "internal1"],
-                    ["seocnd dispaly", "second internal"],
-                    ["really lon gop", "int3"],
-                    ["display", "internal1"],
-                    ["seocnd dispaly", "second internal"],
-                    ["really lon gop", "int3"],
-                    ["display", "internal1"],
-                    ["seocnd dispaly", "second internal"],
-                    ["really lon gop", "int3"],
-                ],
-                onValue: (x) => console.log(x),
-            },
-            dummeeeeey: {
-                type: PluginSettings.PluginSettingType
-                    .RADIO,
-                options: [
-                    ["display", "internal1"],
-                    ["seocnd dispaly", "second internal"],
-                    ["really lon gop", "int3"],
-                    ["display", "internal1"],
-                    ["seocnd dispaly", "second internal"],
-                    ["really lon gop", "int3"],
-                    ["display", "internal1"],
-                    ["seocnd dispaly", "second internal"],
-                    ["really lon gop", "int3"],
-                    ["display", "internal1"],
-                    ["seocnd dispaly", "second internal"],
-                    ["really lon gop", "int3"],
-                    ["display", "internal1"],
-                    ["seocnd dispaly", "second internal"],
-                    ["really lon gop", "int3"],
-                    ["display", "internal1"],
-                    ["seocnd dispaly", "second internal"],
-                    ["really lon gop", "int3"],
-                ],
-                onValue: (x) => console.log(x),
-            },
-        };
-        console.log("initialized handwriting");
-        console.log(this.points);
+        this.font = "Arial";
     }
 
     public offer(o: any) {
@@ -207,19 +130,12 @@ class Handwriting implements PluginFn {
                     el.getAttribute("stroke")
                 );
                 el.setAttribute("stroke-width", "0");
-                // if (el.getAttribute("style") !== "") {
-                //     el.setAttribute(
-                //         "style",
-                //         el.getAttribute("style") +
-                //             ";" +
-                //             "font: sans-serif;"
-                //     );
-                // } else {
-                //     el.setAttribute(
-                //         "style",
-                //         "font:  sans-serif;"
-                //     );
-                // }
+                // el.setAttribute(
+                //     "style",
+                //     `${el.getAttribute("style")};font:${
+                //         this.font
+                //     }`
+                // );
             });
 
             delete o.width;
@@ -250,41 +166,34 @@ class Handwriting implements PluginFn {
         });
         var xhr = new XMLHttpRequest();
         return new Promise((resolve, reject) => {
-            xhr.addEventListener(
-                "readystatechange",
-                function () {
-                    if (this.readyState === 4) {
-                        switch (this.status) {
-                            case 200:
-                                var response = JSON.parse(
-                                    this.responseText
-                                );
-                                resolve({
-                                    tag: "text",
-                                    x: `${x}`,
-                                    y: `${y}`,
-                                    textContent:
-                                        response[1][0][1][0],
-                                    width: width,
-                                    height: height,
-                                    AABB: [
-                                        x,
-                                        y,
-                                        width,
-                                        height,
-                                    ],
-                                });
-                                break;
-                            case 403:
-                                //access denied
-                                break;
-                            case 503:
-                                //cannot connect to recognition server
-                                break;
-                        }
+            xhr.addEventListener("readystatechange", () => {
+                if (xhr.readyState === 4) {
+                    switch (xhr.status) {
+                        case 200:
+                            var response = JSON.parse(
+                                xhr.responseText
+                            );
+                            resolve({
+                                tag: "text",
+                                x: `${x}`,
+                                y: `${y}`,
+                                textContent:
+                                    response[1][0][1][0],
+                                width: width,
+                                height: height,
+                                AABB: [x, y, width, height],
+                                "font-family": this.font,
+                            });
+                            break;
+                        case 403:
+                            //access denied
+                            break;
+                        case 503:
+                            //cannot connect to recognition server
+                            break;
                     }
                 }
-            );
+            });
             xhr.open(
                 "POST",
                 "https://www.google.com.tw/inputtools/request?ime=handwriting&app=mobilesearch&cs=1&oe=UTF-8"
@@ -295,5 +204,62 @@ class Handwriting implements PluginFn {
             );
             xhr.send(data);
         });
+    }
+
+    public settings(): PluginSettings.IPluginSettings {
+        return {
+            font: {
+                type: PluginSettings.PluginSettingType
+                    .SELECT,
+                options: [
+                    {
+                        name: "Arial",
+                        value: "Arial",
+                        state: this.font,
+                    },
+                    {
+                        name: "Verdana",
+                        value: "Verdana",
+                        state: this.font,
+                    },
+                    {
+                        name: "Tahoma",
+                        value: "Tahoma",
+                        state: this.font,
+                    },
+                    {
+                        name: "Trebuchet",
+                        value: "Trebuchet",
+                        state: this.font,
+                    },
+                    {
+                        name: "Times New Roman",
+                        value: "Times New Roman",
+                        state: this.font,
+                    },
+                    {
+                        name: "Georgia",
+                        value: "Georgia",
+                        state: this.font,
+                    },
+                    {
+                        name: "Garamond",
+                        value: "Garamond",
+                        state: this.font,
+                    },
+                    {
+                        name: "Courier New",
+                        value: "Courier New",
+                        state: this.font,
+                    },
+                    {
+                        name: "Brush Script MT",
+                        value: "Brush Script MT",
+                        state: this.font,
+                    },
+                ],
+                onValue: (x) => (this.font = x),
+            },
+        };
     }
 }

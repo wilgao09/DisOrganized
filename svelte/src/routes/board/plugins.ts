@@ -238,7 +238,13 @@ export default class PluginManager {
         if (ob === undefined) {
             return undefined;
         } else {
-            return this.fnorder[ob[0]].settings;
+            let settingFn = this.fnorder[
+                ob[0]
+            ].settings?.bind(this.fnorder[ob[0]]);
+            if (settingFn === undefined) {
+                return undefined;
+            }
+            return settingFn();
         }
     }
 }

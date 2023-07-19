@@ -9,6 +9,56 @@
     let displayingSettings:
         | undefined
         | PluginSettings.IPluginSettings = undefined;
+
+    function inputOfOption(
+        settingName: string,
+        type: PluginSettings.PluginSettingType,
+        o: PluginSettings.IOption,
+        cb: (s: string) => void
+    ): HTMLElement {
+        let inputel = document.createElement(
+            "input"
+        ) as HTMLInputElement;
+        let lbl = document.createElement(
+            "label"
+        ) as HTMLLabelElement;
+        inputel.type = type;
+        inputel.addEventListener("change", (e) => {
+            let str = (
+                e.currentTarget as EventTarget &
+                    HTMLInputElement
+            ).value;
+            cb(str);
+        });
+
+        switch (type) {
+            case PluginSettings.PluginSettingType.CHECKBOX:
+                inputel.value = o.value;
+                inputel.name = settingName;
+                inputel.checked = o.value === o.state;
+                lbl.appendChild(inputel);
+                lbl.appendChild(
+                    document.createTextNode(`${o.name}`)
+                );
+                break;
+            case PluginSettings.PluginSettingType.RADIO:
+                inputel.value = o.value;
+                inputel.name = settingName;
+                inputel.checked = o.value === o.state;
+                lbl.appendChild(inputel);
+                lbl.appendChild(
+                    document.createTextNode(`${o.name}`)
+                );
+                break;
+            case PluginSettings.PluginSettingType.TEXT:
+                inputel.value = o.state;
+                inputel.placeholder = o.name;
+                break;
+            // WE DONT DO SELECT IN HERE
+        }
+
+        return lbl;
+    }
 </script>
 
 <!-- <div> -->
@@ -22,6 +72,7 @@
                 displaying = fnName;
                 displayingSettings =
                     pm.getPluginOptionsByName(fnName);
+                console.log(displayingSettings);
             }}
         />
     {/each}
@@ -47,8 +98,10 @@
                     }}
                 >
                     {#each ps.options as op}
-                        <option value={op[1]}
-                            >{op[0]}</option
+                        <option
+                            value={op.value}
+                            selected={op.state === op.value}
+                            >{op.name}</option
                         >
                     {/each}
                 </select>
@@ -58,20 +111,12 @@
                 {settingName}
                 <div>
                     {#each ps.options as op}
-                        <label class="plugin-setting-input">
-                            <input
-                                type={ps.type}
-                                name={settingName}
-                                value={op[1]}
-                                on:change={(e) => {
-                                    ps.onValue(
-                                        e.currentTarget
-                                            .value
-                                    );
-                                }}
-                            />
-                            {op[0]}
-                        </label>
+                        {inputOfOption(
+                            settingName,
+                            ps.type,
+                            op,
+                            ps.onValue
+                        )}
                     {/each}
                 </div>
             </div>
